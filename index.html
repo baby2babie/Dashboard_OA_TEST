@@ -778,6 +778,21 @@ async function loadTenantDashboard(room, isAdminView = false) {
   document.getElementById('t-room-no').textContent = room;
   document.getElementById('admin-name').textContent = 'ข้อมูลห้อง ' + room;
 
+    // ── loading state ──
+  const loadingHTML = `<div style="text-align:center;padding:40px 20px;color:#9CA3AF">
+    <div style="font-size:36px;margin-bottom:12px">⏳</div>
+    <div style="font-size:16px;font-weight:600;color:#6B7280">กำลังโหลดข้อมูล...</div>
+    <div style="font-size:13px;margin-top:6px">ห้อง ${room}</div>
+  </div>`;
+
+  ['t-elec','t-water','t-total','t-points'].forEach(id => {
+    document.getElementById(id).textContent = '...';
+  });
+  document.getElementById('t-bills').innerHTML = loadingHTML;
+  document.getElementById('t-tier-label').textContent = 'กำลังโหลด...';
+  document.getElementById('t-tier-emoji').textContent = '⏳';
+  document.getElementById('t-dur').textContent = '';
+
   try {
     const data = await callGAS('getTenantDashboard', { room });
     if (!data.success) {
