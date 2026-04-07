@@ -795,25 +795,32 @@ async function loadTenantDashboard(room, isAdminView = false) {
         ? `อีก ${data.tierMonthsLeft} เดือน → ${data.tierNextEmoji} ${data.tierNextLabel}`
         : '🏆 ระดับสูงสุดแล้ว!';
         
-    // ── metric ──
-    const lastIdx = (data.electric || []).length - 1;
-    const elec    = data.electric[lastIdx]  || 0;
-    const water   = data.water[lastIdx]     || 0;
-    const total   = data.bills[0]?.total    || 0;
-    const points  = data.monthPoints        || 0;
+// ── metric ──
+const lastIdx = [...(data.electric || [])].map((v,i) => v !== null ? i : -1).filter(i => i >= 0).pop() ?? -1;
+if (lastIdx < 0) {
+  document.getElementById('t-elec').textContent  = '-';
+  document.getElementById('t-water').textContent = '-';
+  document.getElementById('t-total').textContent = '-';
+  renderTenantChart();
+  return;
+}
+const elec   = data.electric[lastIdx] || 0;
+const water  = data.water[lastIdx]    || 0;
+const total  = data.bills[0]?.total   || 0;
+const points = data.monthPoints       || 0;
 
-    const avgElec  = avg5(data.electric);
-    const avgWater = avg5(data.water);
-    const diffElec  = avgElec  ? Math.round(((elec  - avgElec)  / avgElec)  * 100) : 0;
-    const diffWater = avgWater ? Math.round(((water - avgWater) / avgWater) * 100) : 0;
+const avgElec   = avg5(data.electric);
+const avgWater  = avg5(data.water);
+const diffElec  = avgElec  ? Math.round(((elec  - avgElec)  / avgElec)  * 100) : 0;
+const diffWater = avgWater ? Math.round(((water - avgWater) / avgWater) * 100) : 0;
 
-    document.getElementById('t-elec').textContent   = '฿ ' + elec.toLocaleString('th-TH');
-    document.getElementById('t-water').textContent  = '฿ ' + water.toLocaleString('th-TH');
-    document.getElementById('t-total').textContent  = '฿ ' + total.toLocaleString('th-TH');
-    document.getElementById('t-points').textContent = points;
+document.getElementById('t-elec').textContent   = '฿ ' + elec.toLocaleString('th-TH');
+document.getElementById('t-water').textContent  = '฿ ' + water.toLocaleString('th-TH');
+document.getElementById('t-total').textContent  = '฿ ' + total.toLocaleString('th-TH');
+document.getElementById('t-points').textContent = points;
 
-    setDelta('t-elec-delta',  diffElec);
-    setDelta('t-water-delta', diffWater);
+setDelta('t-elec-delta',  diffElec);
+setDelta('t-water-delta', diffWater);
 
     // ── due date ──
     const lastMonth = (data.months || [])[lastIdx] || '';
