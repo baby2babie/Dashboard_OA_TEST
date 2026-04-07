@@ -785,16 +785,15 @@ async function loadTenantDashboard(room, isAdminView = false) {
     }
     tenantData = data;
 
-    // ── tier ──
-document.getElementById('t-tier-emoji').textContent = data.tierEmoji || '🏠';
+// ── tier ──
+    document.getElementById('t-tier-emoji').textContent = data.tierEmoji || '🏠';
     document.getElementById('t-tier-label').textContent = data.tierLabel || 'Member';
     document.getElementById('t-dur').textContent        = data.dur || '';
     document.getElementById('t-progress-fill').style.width = (data.tierProgress || 0) + '%';
     document.getElementById('t-next-tier').textContent =
-      data.tierNextLabell
-  ? `${data.tierNextEmoji || ''} อีก ${data.tierMonthsLeft} เดือน → ${data.tierNextLabel}`
-  : '🏆 Tier สูงสุดแล้ว';
-document.getElementById('t-next-tier').textContent = nextLabel;
+      data.tierNextLabel
+        ? `อีก ${data.tierMonthsLeft} เดือน → ${data.tierNextEmoji} ${data.tierNextLabel}`
+        : '🏆 ระดับสูงสุดแล้ว!';
         
     // ── metric ──
     const lastIdx = (data.electric || []).length - 1;
