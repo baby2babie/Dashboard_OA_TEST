@@ -786,23 +786,16 @@ async function loadTenantDashboard(room, isAdminView = false) {
     tenantData = data;
 
     // ── tier ──
-    // แก้ตรงนี้
 document.getElementById('t-tier-emoji').textContent = data.tierEmoji || '🏠';
-document.getElementById('t-tier-label').textContent = data.tierLabel || 'Member';
-document.getElementById('t-dur').textContent = data.dur || '';
-
-// progress bar
-const progress = data.tierProgress || 0;
-document.getElementById('t-progress-fill').style.width = progress + '%';
-
-// next tier
-const nextLabel = data.tierNextLabel
+    document.getElementById('t-tier-label').textContent = data.tierLabel || 'Member';
+    document.getElementById('t-dur').textContent        = data.dur || '';
+    document.getElementById('t-progress-fill').style.width = (data.tierProgress || 0) + '%';
+    document.getElementById('t-next-tier').textContent =
+      data.tierNextLabell
   ? `${data.tierNextEmoji || ''} อีก ${data.tierMonthsLeft} เดือน → ${data.tierNextLabel}`
   : '🏆 Tier สูงสุดแล้ว';
 document.getElementById('t-next-tier').textContent = nextLabel;
-        ? `อีก ${data.tierMonthsLeft} เดือน → ${data.tierNextEmoji} ${data.tierNextLabel}`
-        : '🏆 ระดับสูงสุดแล้ว!';
-
+        
     // ── metric ──
     const lastIdx = (data.electric || []).length - 1;
     const elec    = data.electric[lastIdx]  || 0;
