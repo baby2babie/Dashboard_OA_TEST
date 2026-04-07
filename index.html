@@ -894,9 +894,16 @@ function switchTenantTab(tab) {
 function renderTenantChart() {
   if (!tenantData.months) return;
   const isElec = currentTenantTab === 'elec';
-  const vals   = isElec ? tenantData.electric : tenantData.water;
-  const labels = (tenantData.months || []).map(m => formatThaiMonthShort(m).split(' ')[0]);
-  const avgVal = avg5(vals);
+  const rawData = isElec ? tenantData.electric : tenantData.water;
+
+  const filtered = tenantData.months.map((m, i) => ({ m, v: rawData[i] }))
+                                    .filter(x => x.v !== null);
+  const labels = filtered.map(x => {
+    const [y, mo] = x.m.split('-');
+    return ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][Number(mo)-1];
+  });
+  const data   = filtered.map(x => x.v);
+  const avgVal = avg5(data);
   const color  = isElec ? '#1D4ED8' : '#27A896';
 
   document.getElementById('t-chart-title').textContent =
@@ -910,36 +917,34 @@ function renderTenantChart() {
       datasets: [
         {
           label: isElec ? 'ค่าไฟ (฿)' : 'ค่าน้ำ (฿)',
-          data: vals,
-          backgroundColor: (vals || []).map((v, i) =>
-            i === vals.length - 1 && v > avgVal * 1.2 ? 'rgba(220,38,38,0.7)' : color + 'aa'),
-          borderColor: (vals || []).map((v, i) =>
-            i === vals.length - 1 && v > avgVal * 1.2 ? '#DC2626' : color),
+          data,
+          backgroundColor: data.map((v, i) =>
+            i === data.length - 1 && v > avgVal * 1.2 ? '#D85A3099' : color + '99'),
+          borderColor: data.map((v, i) =>
+            i === data.length - 1 && v > avgVal * 1.2 ? '#993C1D' : color),
           borderWidth: 1.5,
-          borderRadius: 8
+          borderRadius: 6
         },
         {
           type: 'line',
           label: 'ค่าเฉลี่ย',
           data: Array(labels.length).fill(avgVal),
-          borderColor: '#9CA3AF',
-          borderWidth: 1.5,
-          borderDash: [5, 5],
-          pointRadius: 0,
-          tension: 0
+          borderColor: '#888780',
+          borderWidth: 1,
+          borderDash: [4, 4],
+          pointRadius: 0
         }
       ]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => '฿ ' + Number(ctx.parsed.y).toLocaleString('th-TH') } }
+        tooltip: { callbacks: { label: ctx => '฿ ' + ctx.parsed.y.toLocaleString('th-TH') } }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 12 }, color: '#9CA3AF', autoSkip: false } },
-        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'Sarabun', size: 11 }, color: '#9CA3AF', callback: v => '฿' + Number(v).toLocaleString('th-TH') } }
+        x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 12 }, color: '#888780', autoSkip: false } },
+        y: { grid: { color: 'rgba(136,135,128,0.15)' }, ticks: { font: { family: 'Sarabun', size: 11 }, color: '#888780', callback: v => '฿' + v.toLocaleString('th-TH') } }
       }
     }
   });
