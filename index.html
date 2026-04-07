@@ -893,19 +893,26 @@ function switchTenantTab(tab) {
 
 function renderTenantChart() {
   if (!tenantData.months) return;
-  const isElec = currentTenantTab === 'elec';
+  const isElec  = currentTenantTab === 'elec';
   const rawData = isElec ? tenantData.electric : tenantData.water;
 
-  const filtered = tenantData.months.map((m, i) => ({ m, v: rawData[i] }))
-                                    .filter(x => x.v !== null);
+  const filtered = tenantData.months
+    .map((m, i) => ({ m, v: rawData[i] }))
+    .filter(x => x.v !== null && x.v !== undefined);
+
+  if (!filtered.length) return;
+
   const labels = filtered.map(x => {
-    const [y, mo] = x.m.split('-');
+    const [, mo] = x.m.split('-');
     return ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][Number(mo)-1];
   });
-  const data   = filtered.map(x => x.v);
-  const avgVal = avg5(data);
-  const color  = isElec ? '#1D4ED8' : '#27A896';
+  const data = filtered.map(x => x.v);
 
+  // avg จาก 5 เดือนแรก (ไม่รวมเดือนล่าสุด)
+  const prev = data.slice(0, -1).filter(v => v > 0);
+  const avgVal = prev.length ? Math.round(prev.reduce((a,b) => a+b, 0) / prev.length) : 0;
+
+  const color = isElec ? '#1D4ED8' : '#27A896';
   document.getElementById('t-chart-title').textContent =
     isElec ? '⚡ ค่าไฟย้อนหลัง 6 เดือน' : '💧 ค่าน้ำย้อนหลัง 6 เดือน';
 
@@ -919,13 +926,13 @@ function renderTenantChart() {
           label: isElec ? 'ค่าไฟ (฿)' : 'ค่าน้ำ (฿)',
           data,
           backgroundColor: data.map((v, i) =>
-            i === data.length - 1 && v > avgVal * 1.2 ? '#D85A3099' : color + '99'),
+            i === data.length - 1 && avgVal && v > avgVal * 1.2 ? '#D85A3099' : color + '99'),
           borderColor: data.map((v, i) =>
-            i === data.length - 1 && v > avgVal * 1.2 ? '#993C1D' : color),
+            i === data.length - 1 && avgVal && v > avgVal * 1.2 ? '#993C1D' : color),
           borderWidth: 1.5,
           borderRadius: 6
         },
-        {
+        ...(avgVal ? [{
           type: 'line',
           label: 'ค่าเฉลี่ย',
           data: Array(labels.length).fill(avgVal),
@@ -933,7 +940,7 @@ function renderTenantChart() {
           borderWidth: 1,
           borderDash: [4, 4],
           pointRadius: 0
-        }
+        }] : [])
       ]
     },
     options: {
