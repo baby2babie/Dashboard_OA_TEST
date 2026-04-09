@@ -267,56 +267,7 @@
   </div>
 
 </div>
-<!-- ===== LUCKY WHEEL ===== -->
-<div class="page" id="page-wheel">
-  <div class="card" style="text-align:center;padding:24px 20px">
-    <div style="font-size:15px;font-weight:700;color:#7C3AED;margin-bottom:4px">🎰 Lucky Wheel</div>
-    <div style="font-size:13px;color:#9CA3AF">ใช้ 30 แต้ม/ครั้ง</div>
-  </div>
 
-  <!-- แต้มคงเหลือ -->
-  <div class="row-2">
-    <div class="card" style="text-align:center">
-      <div class="card-title">💎 แต้มคงเหลือ</div>
-      <div class="card-value blue" id="wheel-points">-</div>
-    </div>
-    <div class="card" style="text-align:center">
-      <div class="card-title">🎰 หมุนได้</div>
-      <div class="card-value" id="wheel-spins">-</div>
-      <div style="font-size:12px;color:#9CA3AF;margin-top:4px">ครั้ง</div>
-    </div>
-  </div>
-
-  <!-- วงล้อ -->
-  <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px">
-    <div style="position:relative;width:280px;height:280px">
-      <div id="wheel-pointer" style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:24px solid #D85A30;z-index:10"></div>
-      <canvas id="wheel-canvas" width="280" height="280"></canvas>
-    </div>
-    <button id="btn-wheel-spin" onclick="doSpin()" style="padding:14px 48px;font-size:16px;font-weight:700;border:none;border-radius:99px;background:linear-gradient(135deg,#7C3AED,#1D4ED8);color:#fff;cursor:pointer;width:100%">
-      🎰 หมุนเลย! (30 แต้ม)
-    </button>
-  </div>
-
-  <!-- ผลลัพธ์ -->
-  <div class="card" id="wheel-result-card" style="display:none;text-align:center;padding:24px">
-    <div id="wheel-result-emoji" style="font-size:48px;margin-bottom:8px"></div>
-    <div id="wheel-result-pts" style="font-size:32px;font-weight:700;color:#7C3AED"></div>
-    <div id="wheel-result-sub" style="font-size:14px;color:#9CA3AF;margin-top:4px"></div>
-    <div id="wheel-result-remain" style="font-size:13px;color:#6B7280;margin-top:8px"></div>
-  </div>
-
-  <!-- ประวัติ -->
-  <div class="card">
-    <div class="card-title">📋 กติกา</div>
-    <div style="font-size:13px;color:#6B7280;line-height:2">
-      • ใช้ <strong>30 แต้ม</strong> ต่อการหมุน 1 ครั้ง<br>
-      • แต้มที่ได้จะสะสมรวมกับแต้ม check-in<br>
-      • แต้มทั้งหมดหักส่วนลดในบิลวันที่ 25 อัตโนมัติ<br>
-      • ลุ้นสูงสุด <strong>80 แต้ม</strong> ต่อครั้ง
-    </div>
-  </div>
-</div>
 <!-- ===== BOTTOM NAV ===== -->
 <div class="bottom-nav" id="bottom-nav">
   <div class="nav-items">
@@ -448,159 +399,19 @@ function fetchLiffProfile() {
     })
     .catch(()=>{document.getElementById('admin-name').textContent='Admin Dashboard';});
 }
-// ══════════════════════════════════════════
-// ── LUCKY WHEEL ──
-// ══════════════════════════════════════════
-const WHEEL_SEGS = [
-  { pts: 10, label: '10 แต้ม',  color: '#E8EDF2', text: '#5F5E5A' },
-  { pts: 50, label: '50 แต้ม',  color: '#DBEAFE', text: '#1D4ED8' },
-  { pts: 20, label: '20 แต้ม',  color: '#D1FAE5', text: '#065F46' },
-  { pts: 80, label: '🎉 80!',   color: '#FAECE7', text: '#993C1D' },
-  { pts: 10, label: '10 แต้ม',  color: '#E8EDF2', text: '#5F5E5A' },
-  { pts: 30, label: '30 แต้ม',  color: '#F3E8FF', text: '#7C3AED' },
-  { pts: 20, label: '20 แต้ม',  color: '#D1FAE5', text: '#065F46' },
-  { pts: 50, label: '50 แต้ม',  color: '#DBEAFE', text: '#1D4ED8' },
-];
-const WHEEL_COST = 30;
-let wheelAngle = 0, wheelSpinning = false, wheelChart = null, wheelRoom = '';
 
-function initWheel() {
-  const canvas = document.getElementById('wheel-canvas');
-  if (!canvas) return;
-  drawWheel(0);
-}
-
-function drawWheel(rot) {
-  const canvas = document.getElementById('wheel-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const n = WHEEL_SEGS.length;
-  const arc = (2 * Math.PI) / n;
-  const cx = 140, cy = 140, r = 130;
-  ctx.clearRect(0, 0, 280, 280);
-  for (let i = 0; i < n; i++) {
-    const start = rot + i * arc;
-    const end = start + arc;
-    ctx.beginPath(); ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, start, end);
-    ctx.closePath();
-    ctx.fillStyle = WHEEL_SEGS[i].color; ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.save();
-    ctx.translate(cx, cy); ctx.rotate(start + arc / 2);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = WHEEL_SEGS[i].text;
-    ctx.font = '600 13px Sarabun, sans-serif';
-    ctx.fillText(WHEEL_SEGS[i].label, r - 10, 5);
-    ctx.restore();
-  }
-  ctx.beginPath(); ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
-  ctx.fillStyle = '#fff'; ctx.fill();
-  ctx.strokeStyle = '#E8EDF2'; ctx.lineWidth = 2; ctx.stroke();
-}
-
-async function loadWheelData(room) {
-  wheelRoom = room;
-  document.getElementById('wheel-points').textContent = '...';
-  document.getElementById('wheel-spins').textContent  = '...';
-  document.getElementById('wheel-result-card').style.display = 'none';
-  try {
-    const data = await callGAS('getTenantDashboard', { room });
-    const pts  = data.monthPoints || 0;
-    const spins = Math.floor(pts / WHEEL_COST);
-    document.getElementById('wheel-points').textContent = pts;
-    document.getElementById('wheel-spins').textContent  = spins;
-    document.getElementById('btn-wheel-spin').disabled = spins <= 0;
-    if (spins <= 0) {
-      document.getElementById('btn-wheel-spin').textContent = `แต้มไม่พอ (ต้องการ ${WHEEL_COST} แต้ม)`;
-    }
-  } catch(e) { showToast('❌ โหลดข้อมูลไม่ได้', 'error'); }
-  initWheel();
-}
-
-async function doSpin() {
-  if (wheelSpinning || !wheelRoom) return;
-  const spins = parseInt(document.getElementById('wheel-spins').textContent) || 0;
-  if (spins <= 0) { showToast('แต้มไม่พอครับ', 'error'); return; }
-
-  wheelSpinning = true;
-  document.getElementById('btn-wheel-spin').disabled = true;
-  document.getElementById('wheel-result-card').style.display = 'none';
-
-  // เรียก GAS สุ่มผล
-  let result;
-  try {
-    result = await callGAS('spinWheel', { room: wheelRoom });
-  } catch(e) { showToast('❌ เกิดข้อผิดพลาด', 'error'); wheelSpinning = false; return; }
-
-  if (!result.success) {
-    showToast(result.message, 'error');
-    wheelSpinning = false;
-    document.getElementById('btn-wheel-spin').disabled = false;
-    return;
-  }
-
-  // หา segment ที่ตรงกับผล
-  const targetIdx = WHEEL_SEGS.findIndex(s => s.pts === result.got);
-  const n = WHEEL_SEGS.length;
-  const arc = (2 * Math.PI) / n;
-  const targetAngle = -(targetIdx * arc + arc / 2);
-  const fullSpins   = (5 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
-  const finalAngle  = targetAngle + fullSpins;
-  const duration    = 4000;
-  const startAngle  = wheelAngle;
-  const startTime   = performance.now();
-
-  function ease(t) { return 1 - Math.pow(1 - t, 4); }
-  function frame(now) {
-    const t = Math.min((now - startTime) / duration, 1);
-    wheelAngle = startAngle + ease(t) * (finalAngle - startAngle);
-    drawWheel(wheelAngle);
-    if (t < 1) { requestAnimationFrame(frame); return; }
-
-    // จบ
-    wheelSpinning = false;
-    const newSpins = Math.floor(result.pointsAfter / WHEEL_COST);
-    document.getElementById('wheel-points').textContent = result.pointsAfter;
-    document.getElementById('wheel-spins').textContent  = newSpins;
-    document.getElementById('btn-wheel-spin').disabled  = newSpins <= 0;
-    if (newSpins <= 0) {
-      document.getElementById('btn-wheel-spin').textContent = `แต้มไม่พอ (ต้องการ ${WHEEL_COST} แต้ม)`;
-    } else {
-      document.getElementById('btn-wheel-spin').textContent = '🎰 หมุนอีกครั้ง! (30 แต้ม)';
-    }
-
-    // แสดงผล
-    const card = document.getElementById('wheel-result-card');
-    card.style.display = 'block';
-    document.getElementById('wheel-result-emoji').textContent = result.isJackpot ? '🎉' : '✨';
-    document.getElementById('wheel-result-pts').textContent   = `+${result.got} แต้ม`;
-    document.getElementById('wheel-result-sub').textContent   = result.isJackpot ? 'แจ็คพอต! ยินดีด้วยครับ!' : 'ได้รับแต้มแล้ว';
-    document.getElementById('wheel-result-remain').textContent = `แต้มคงเหลือ ${result.pointsAfter} แต้ม`;
-  }
-  requestAnimationFrame(frame);
-}
 // ── INIT ──
 async function init() {
   const params = new URLSearchParams(window.location.search);
   const room   = params.get('room');
-  const page   = params.get('page');
 
-  if (room && page === 'wheel') {
-    // ══ WHEEL MODE ══
-    document.getElementById('bottom-nav').style.display = 'none';
-    document.getElementById('page-title').textContent = '🎰 Lucky Wheel';
-    switchPage('wheel');
-    loadWheelData(room);
-
-  } else if (room) {
+  if (room) {
     // ══ TENANT MODE ══
     document.getElementById('bottom-nav').style.display = 'none';
     document.getElementById('page-title').textContent = '🏠 ข้อมูลห้องของคุณ';
     document.getElementById('admin-name').textContent = 'กำลังโหลด...';
     switchPage('tenant');
-    loadTenantDashboard(room, false);
-
+    loadTenantDashboard(room, false); // false = ไม่ใช่ admin mode
   } else {
     // ══ ADMIN MODE ══
     switchPage('dashboard');
@@ -609,7 +420,7 @@ async function init() {
     initUsageMonthSelect();
     switchFloor(1);
     initYearSelect();
-    document.getElementById('admin-name').textContent = 'Admin Dashboard';
+    document.getElementById('admin-name').textContent='Admin Dashboard';
     fetchLiffProfile();
   }
 }
