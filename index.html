@@ -457,7 +457,10 @@ function switchPage(page) {
   }
   if(page==='usage')  loadUsage();
   if(page==='yearly') loadYearly();
-  if(page==='bill-summary') loadBillSummary();
+  if(page==='bill-summary') {
+  const month = document.getElementById('month-select').value;
+  loadBillSummary(month);
+}
   window.scrollTo(0,0);
 }
 
