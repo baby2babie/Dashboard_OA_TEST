@@ -1013,7 +1013,7 @@ async function loadBillSummary() {
       UNPAID:   ['รอชำระ',   '#FEE2E2', '#991B1B'],
       LATE:     ['ล่าช้า',   '#FEF3C7', '#92400E'],
       VACANT:   ['ห้องว่าง', '#F3F4F6', '#6B7280'],
-      MOVE_OUT: ['ย้ายออก',  '#DBEAFE', '#1E40AF'],
+      MOVE_OUT: ['ย้ายออก',  '#eb6565', '#1E40AF'],
     };
     const rows = data.rooms.map(r => {
       const [label, bg, color] = badgeMap[r.status] || badgeMap['UNPAID'];
