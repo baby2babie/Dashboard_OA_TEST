@@ -1030,10 +1030,10 @@ async function loadBillSummary() {
     const totalWater   = active.reduce((s, r) => s + (Number(r.water)    || 0), 0);
     const totalElec    = active.reduce((s, r) => s + (Number(r.electric) || 0), 0);
     const totalAll     = active.reduce((s, r) => s + (Number(r.total)    || 0), 0);
-    const totalUnpaid  = active.filter(r => r.status === 'UNPAID' || r.status === 'LATE')
+    const totalUnpaid  = active.filter(r => r.status === 'UNPAID')
                                .reduce((s, r) => s + (Number(r.total) || 0), 0);
     const paid    = data.rooms.filter(r => r.status === 'PAID').length;
-    const unpaid  = data.rooms.filter(r => r.status === 'UNPAID' || r.status === 'LATE').length;
+    const unpaid  = data.rooms.filter(r => r.status === 'UNPAID').length;
     const special = data.rooms.filter(r => r.status === 'VACANT' || r.status === 'MOVE_OUT').length;
 
     document.getElementById('bs-content').innerHTML = `
