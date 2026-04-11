@@ -26,11 +26,13 @@
 <!-- ===== DASHBOARD ===== -->
 
   <div class="page" id="page-bill-summary">
+  <select class="month-select" id="bs-month-select" onchange="loadBillSummary()"></select>
   <div id="bs-content">
     <div style="text-align:center;color:#9CA3AF;padding:40px">⏳ กำลังโหลด...</div>
   </div>
 </div>
 <div class="page active" id="page-dashboard">
+  <select class="month-select" id="month-select" onchange="loadDashboard()"></select>
   <div class="card"><div class="card-title">💰 ยอดรวมทั้งหมด</div><div class="card-value" id="d-total">-</div></div>
   <div class="row-2">
     <div class="card"><div class="card-title">✅ รับแล้ว</div><div class="card-value green" id="d-paid">-</div></div>
@@ -992,9 +994,10 @@ function renderTenantChart() {
     }
   });
 }
-  async function loadBillSummary() {
-  const month = document.getElementById('month-select').value;
-  document.getElementById('month-select').innerHTML =
+async function loadBillSummary() {
+  const month = document.getElementById('bs-month-select')?.value
+    || document.getElementById('month-select').value;
+  document.getElementById('bs-content').innerHTML =
     '<div style="text-align:center;color:#9CA3AF;padding:40px">⏳ กำลังโหลด...</div>';
   try {
     const data = await callGAS('getBillSummary', { monthKey: month });
