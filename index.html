@@ -24,6 +24,13 @@
 </div>
 
 <!-- ===== DASHBOARD ===== -->
+
+  <div class="page" id="page-bill-summary">
+  <select class="month-select" id="bs-month-select" onchange="loadBillSummary()"></select>
+  <div id="bs-content">
+    <div style="text-align:center;color:#9CA3AF;padding:40px">⏳ กำลังโหลด...</div>
+  </div>
+</div>
 <div class="page active" id="page-dashboard">
   <select class="month-select" id="month-select" onchange="loadDashboard()"></select>
   <div class="card"><div class="card-title">💰 ยอดรวมทั้งหมด</div><div class="card-value" id="d-total">-</div></div>
@@ -329,6 +336,14 @@
       <div class="drawer-item-sub">ให้ผู้เช่าเห็นบิลใหม่</div>
     </div>
   </button>
+  
+  <button class="drawer-item" onclick="switchPage('bill-summary');closeDrawer()">
+  <div class="drawer-item-icon" style="background:#EDE9FE">📋</div>
+  <div>
+    <div class="drawer-item-label">สรุปบิลรายห้อง</div>
+    <div class="drawer-item-sub">ยอด น้ำ ไฟ สถานะทุกห้อง</div>
+  </div>
+</button>
 
   <div class="drawer-title" style="margin-top:16px">แจ้งเตือน</div>
 
@@ -443,6 +458,7 @@ function switchPage(page) {
   }
   if(page==='usage')  loadUsage();
   if(page==='yearly') loadYearly();
+  if(page==='bill-summary') loadBillSummary();
   window.scrollTo(0,0);
 }
 
@@ -978,7 +994,87 @@ function renderTenantChart() {
     }
   });
 }
+async function loadBillSummary() {
+  const month = document.getElementById('bs-month-select')?.value
+    || document.getElementById('month-select').value;
+  document.getElementById('bs-content').innerHTML =
+    '<div style="text-align:center;color:#9CA3AF;padding:40px">⏳ กำลังโหลด...</div>';
+  try {
+    const data = await callGAS('getBillSummary', { monthKey: month });
+    if (!data.success) { showToast('❌ โหลดไม่ได้', 'error'); return; }
+    const fmt = n => n != null ? Number(n).toLocaleString('th-TH') : '—';
+    const badgeMap = {
+      PAID:     ['ชำระแล้ว', '#D1FAE5', '#065F46'],
+      UNPAID:   ['รอชำระ',   '#FEE2E2', '#991B1B'],
+      LATE:     ['ล่าช้า',   '#FEF3C7', '#92400E'],
+      VACANT:   ['ห้องว่าง', '#F3F4F6', '#6B7280'],
+      MOVE_OUT: ['ย้ายออก',  '#DBEAFE', '#1E40AF'],
+    };
+    const rows = data.rooms.map(r => {
+      const [label, bg, color] = badgeMap[r.status] || badgeMap['UNPAID'];
+      const isEmpty = r.status === 'VACANT' || r.status === 'MOVE_OUT';
+      return `<div style="display:grid;grid-template-columns:44px 60px 60px 80px 68px;align-items:center;padding:9px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);gap:6px;font-family:Sarabun,sans-serif">
+        <span style="font-size:13px;font-weight:600">${r.room}</span>
+        <span style="font-size:12px;text-align:right;color:${isEmpty?'#9CA3AF':'#1F2937'}">${isEmpty?'—':fmt(r.water)}</span>
+        <span style="font-size:12px;text-align:right;color:${isEmpty?'#9CA3AF':'#1F2937'}">${isEmpty?'—':fmt(r.electric)}</span>
+        <span style="font-size:13px;font-weight:600;text-align:right;color:${isEmpty?'#9CA3AF':'#1F2937'}">${isEmpty?'—':fmt(r.total)}</span>
+        <span style="font-size:10px;padding:2px 7px;border-radius:99px;text-align:center;background:${bg};color:${color};white-space:nowrap">${label}</span>
+      </div>`;
+    });
+    const active = data.rooms.filter(r => r.status !== 'VACANT' && r.status !== 'MOVE_OUT');
+    const totalWater   = active.reduce((s, r) => s + (Number(r.water)    || 0), 0);
+    const totalElec    = active.reduce((s, r) => s + (Number(r.electric) || 0), 0);
+    const totalAll     = active.reduce((s, r) => s + (Number(r.total)    || 0), 0);
+    const totalUnpaid  = active.filter(r => r.status === 'UNPAID' || r.status === 'LATE')
+                               .reduce((s, r) => s + (Number(r.total) || 0), 0);
+    const paid    = data.rooms.filter(r => r.status === 'PAID').length;
+    const unpaid  = data.rooms.filter(r => r.status === 'UNPAID' || r.status === 'LATE').length;
+    const special = data.rooms.filter(r => r.status === 'VACANT' || r.status === 'MOVE_OUT').length;
 
+    document.getElementById('bs-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+        <div style="background:#F9FAFB;border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px">ชำระแล้ว</div>
+          <div style="font-size:20px;font-weight:700;color:#16A34A">${paid}</div>
+        </div>
+        <div style="background:#F9FAFB;border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px">รอชำระ</div>
+          <div style="font-size:20px;font-weight:700;color:#DC2626">${unpaid}</div>
+        </div>
+        <div style="background:#F9FAFB;border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px">ว่าง/ย้ายออก</div>
+          <div style="font-size:20px;font-weight:700;color:#9CA3AF">${special}</div>
+        </div>
+      </div>
+      <div style="border:0.5px solid rgba(0,0,0,0.08);border-radius:14px;overflow:hidden;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:44px 60px 60px 80px 68px;padding:9px 12px;background:#F9FAFB;gap:6px">
+          <span style="font-size:11px;color:#9CA3AF">ห้อง</span>
+          <span style="font-size:11px;color:#9CA3AF;text-align:right">ค่าน้ำ</span>
+          <span style="font-size:11px;color:#9CA3AF;text-align:right">ค่าไฟ</span>
+          <span style="font-size:11px;color:#9CA3AF;text-align:right">ยอด (บาท)</span>
+          <span style="font-size:11px;color:#9CA3AF;text-align:center">สถานะ</span>
+        </div>
+        ${rows.join('')}
+        <div style="display:grid;grid-template-columns:44px 60px 60px 80px 68px;align-items:center;padding:9px 12px;background:#F9FAFB;border-top:0.5px solid rgba(0,0,0,0.1);gap:6px">
+          <span style="font-size:11px;font-weight:600;color:#6B7280">รวม</span>
+          <span style="font-size:12px;font-weight:600;text-align:right">${fmt(totalWater)}</span>
+          <span style="font-size:12px;font-weight:600;text-align:right">${fmt(totalElec)}</span>
+          <span style="font-size:13px;font-weight:700;text-align:right">${fmt(totalAll)}</span>
+          <span></span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:#F9FAFB;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:#6B7280">ยอดรวม</span>
+          <span style="font-size:14px;font-weight:700">${fmt(totalAll)}</span>
+        </div>
+        <div style="background:#FEF2F2;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:#991B1B">รอชำระ</span>
+          <span style="font-size:14px;font-weight:700;color:#DC2626">${fmt(totalUnpaid)}</span>
+        </div>
+      </div>`;
+  } catch(e) { showToast('❌ ' + e.message, 'error'); }
+}
 init();
 </script>
 </body>
