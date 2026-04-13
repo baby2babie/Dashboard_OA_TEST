@@ -208,16 +208,6 @@
       </div>
       <div id="lb-pick-error" style="color:#DC2626;font-size:13px"></div>
     </div>
-
-    <!-- step 2: เปิดกล่อง (แบบเดิม) -->
-    <div id="lb-ready" style="display:none">
-      <div id="lb-box" style="width:120px;height:120px;background:#FAEEDA;border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:64px">🎁</div>
-      <div style="font-size:20px;font-weight:700;color:#1F2937;margin-bottom:8px">กล่องสุ่มพิเศษ</div>
-      <div style="font-size:14px;color:#6B7280;margin-bottom:20px">กดเปิดเพื่อรับส่วนลดทันทีครับ</div>
-      <button id="lb-open-btn" onclick="doOpenLootBox()" style="width:100%;padding:14px;background:#7F77DD;border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🎁 เปิดกล่องสุ่ม</button>
-      <div id="lb-error" style="color:#DC2626;font-size:13px;margin-top:12px"></div>
-    </div>
-
     <!-- step 3: ผลรางวัล -->
     <div id="lb-result" style="display:none">
       <div style="width:120px;height:120px;background:#D1FAE5;border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:64px">🎉</div>
@@ -1169,60 +1159,55 @@ function selectAndReveal(idx) {
     return; 
   }
 
-  // ✅ วน token ตาม idx ถ้ามีน้อยกว่า 3 ก็วนซ้ำ
-  const box    = boxes[idx % boxes.length];
-  lootToken    = box.token;
+  const box = boxes[idx % boxes.length];
+  lootToken = box.token;
 
   // animation กล่องที่เลือก
   const boxEls = document.querySelectorAll('#lb-pick > div:nth-child(3) > div');
   boxEls.forEach((b, i) => {
     b.style.opacity   = i === idx ? '1' : '0.3';
     b.style.transform = i === idx ? 'scale(1.15)' : 'scale(0.9)';
+    b.style.pointerEvents = 'none'; // ✅ กันกดซ้ำ
   });
 
-  // หน่วงแล้วเปลี่ยนหน้า
-  setTimeout(() => {
-    document.getElementById('lb-pick').style.display  = 'none';
-    document.getElementById('lb-ready').style.display = 'block';
-  }, 400);
+  // สั่นกล่องที่เลือก
+  const el    = boxEls[idx];
+  let   count = 0;
+  const shake = setInterval(() => {
+    el.style.transform = count % 2 === 0 ? 'scale(1.15) rotate(-8deg)' : 'scale(1.15) rotate(8deg)';
+    if (++count > 8) {
+      clearInterval(shake);
+      el.style.transform = 'scale(1.15)';
+      doOpenLootBox(); // ✅ เปิดเลย
+    }
+  }, 80);
 }
 
 async function doOpenLootBox() {
-  if (!lootToken) { 
-    document.getElementById('lb-error').textContent = '❌ ไม่พบ token'; 
-    return; 
-  }
-  const btn = document.getElementById('lb-open-btn');
-  const box = document.getElementById('lb-box');
-  btn.disabled    = true;
-  btn.textContent = '⏳ กำลังเปิด...';
-  document.getElementById('lb-error').textContent = '';
-
-  let count = 0;
-  const shake = setInterval(() => {
-    box.style.transform  = count % 2 === 0 ? 'rotate(-8deg)' : 'rotate(8deg)';
-    box.style.transition = 'transform 0.08s';
-    if (++count > 8) { clearInterval(shake); box.style.transform = 'rotate(0)'; }
-  }, 80);
+  if (!lootToken) return;
 
   try {
     const data = await callGAS('openLootBox', { token: lootToken });
     if (data.success) {
       document.getElementById('lb-amount').textContent     = '-' + Number(data.discount_amount).toLocaleString('th-TH') + ' บาท';
       document.getElementById('lb-prize-name').textContent = data.prize_name;
+      document.getElementById('lb-pick').style.display    = 'none';
       document.getElementById('lb-ready').style.display   = 'none';
       document.getElementById('lb-result').style.display  = 'block';
     } else {
-      btn.disabled    = false;
-      btn.textContent = '🎁 เปิดกล่องสุ่ม';
-      document.getElementById('lb-error').textContent = data.message === 'เปิดแล้ว'
+      document.getElementById('lb-pick-error').textContent = data.message === 'เปิดแล้ว'
         ? '❌ กล่องนี้เปิดไปแล้วครับ'
         : '❌ ' + (data.message || 'เกิดข้อผิดพลาด');
+      // reset กล่อง
+      const boxEls = document.querySelectorAll('#lb-pick > div:nth-child(3) > div');
+      boxEls.forEach(b => {
+        b.style.opacity       = '1';
+        b.style.transform     = 'scale(1)';
+        b.style.pointerEvents = 'auto';
+      });
     }
   } catch(e) {
-    btn.disabled    = false;
-    btn.textContent = '🎁 เปิดกล่องสุ่ม';
-    document.getElementById('lb-error').textContent = '❌ ' + e.message;
+    document.getElementById('lb-pick-error').textContent = '❌ ' + e.message;
   }
 }
 init();
