@@ -1189,34 +1189,21 @@ async function loadLootBoxes() {
   }
 }
 
-// async function openBoxPopup(token, tier) {
-//   currentToken = token;
-//   currentTier  = tier;
-//   const cfg    = TIER_CONFIG[tier] || TIER_CONFIG[28];
+async function openBoxPopup(token, tier) {
+  currentToken = token;
+  currentTier  = tier;
+  const cfg    = TIER_CONFIG[tier] || TIER_CONFIG[28];
 
-//   document.getElementById('lb-popup-box-icon').style.background = cfg.bg;
-//   document.getElementById('lb-popup-box-icon').textContent       = cfg.emoji;
-//   document.getElementById('lb-popup-title').textContent          = `กล่อง${cfg.label}`;
-//   document.getElementById('lb-popup-sub').textContent            = cfg.sub;
-//   document.getElementById('lb-popup-ready').style.display        = 'block';
-//   document.getElementById('lb-popup-result').style.display       = 'none';
-//   document.getElementById('lb-error').textContent                = '';
-//   document.getElementById('lb-popup-prize-list').textContent     = 'กำลังโหลด...';
+  document.getElementById('lb-popup-box-icon').style.background = cfg.bg;
+  document.getElementById('lb-popup-box-icon').textContent       = cfg.emoji;
+  document.getElementById('lb-popup-title').textContent          = `กล่อง${cfg.label}`;
+  document.getElementById('lb-popup-sub').textContent            = cfg.sub;
+  document.getElementById('lb-popup-ready').style.display        = 'block';
+  document.getElementById('lb-popup-result').style.display       = 'none';
+  document.getElementById('lb-error').textContent                = '';
 
-//   document.getElementById('lb-popup').style.display = 'flex';
-
-//   try {
-//     const data = await callGAS('getLootPrizeList', { tier });
-//     if (data.success && data.prizes) {
-//       const icons = ['🟢','🟡','🟠','🔴','🔴'];
-//       document.getElementById('lb-popup-prize-list').innerHTML = data.prizes
-//         .map((p, i) => `${icons[Math.min(i, 4)]} ${p.prize_name} (${p.pct}%)`)
-//         .join('<br>');
-//     }
-//   } catch(e) {
-//     document.getElementById('lb-popup-prize-list').textContent = '-';
-//   }
-// }
+  document.getElementById('lb-popup').style.display = 'flex';
+}
 
 async function doOpenLootBox() {
   if (!currentToken) return;
