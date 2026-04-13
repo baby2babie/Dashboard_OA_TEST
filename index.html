@@ -200,10 +200,6 @@
       <div id="lb-box" style="width:120px;height:120px;background:#FAEEDA;border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:64px">🎁</div>
       <div style="font-size:20px;font-weight:700;color:#1F2937;margin-bottom:8px">กล่องสุ่มพิเศษ</div>
       <div style="font-size:14px;color:#6B7280;margin-bottom:16px;line-height:1.6">เช็คอินครบ 28 วัน<br>กดเปิดเพื่อรับส่วนลดทันที</div>
-      <div style="background:#F5F3FF;border-radius:12px;padding:12px 16px;margin-bottom:20px;text-align:left">
-        <div style="font-size:12px;color:#6B7280;margin-bottom:6px">โอกาสได้รับ</div>
-        <div id="lb-prize-list" style="font-size:13px;color:#4F46E5;line-height:1.8"></div>
-      </div>
       <button id="lb-open-btn" onclick="doOpenLootBox()" style="width:100%;padding:14px;background:#7F77DD;border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🎁 เปิดกล่องสุ่ม</button>
       <div id="lb-error" style="color:#DC2626;font-size:13px;margin-top:12px"></div>
     </div>
@@ -1133,20 +1129,19 @@ async function initLootBox(room, token) {
 }
 
 async function doOpenLootBox() {
+  if (!lootToken) { 
+    document.getElementById('lb-error').textContent = '❌ ไม่พบ token'; 
+    return; 
+  }
   const btn = document.getElementById('lb-open-btn');
   const box = document.getElementById('lb-box');
-  const err = document.getElementById('lb-error');
-
-  if (!lootToken) { err.textContent = 'ไม่พบ token กรุณากดลิงก์จาก LINE ใหม่'; return; }
-
   btn.disabled    = true;
   btn.textContent = '⏳ กำลังเปิด...';
-  err.textContent = '';
+  document.getElementById('lb-error').textContent = '';
 
-  // animation สั่น
   let count = 0;
   const shake = setInterval(() => {
-    box.style.transform = count % 2 === 0 ? 'rotate(-8deg)' : 'rotate(8deg)';
+    box.style.transform  = count % 2 === 0 ? 'rotate(-8deg)' : 'rotate(8deg)';
     box.style.transition = 'transform 0.08s';
     if (++count > 8) { clearInterval(shake); box.style.transform = 'rotate(0)'; }
   }, 80);
@@ -1154,22 +1149,21 @@ async function doOpenLootBox() {
   try {
     const data = await callGAS('openLootBox', { token: lootToken });
     if (data.success) {
-      document.getElementById('lb-amount').textContent =
-        '-' + Number(data.discount_amount).toLocaleString('th-TH') + ' บาท';
+      document.getElementById('lb-amount').textContent     = '-' + Number(data.discount_amount).toLocaleString('th-TH') + ' บาท';
       document.getElementById('lb-prize-name').textContent = data.prize_name;
-      document.getElementById('lb-ready').style.display  = 'none';
-      document.getElementById('lb-result').style.display = 'block';
+      document.getElementById('lb-ready').style.display   = 'none';
+      document.getElementById('lb-result').style.display  = 'block';
     } else {
       btn.disabled    = false;
       btn.textContent = '🎁 เปิดกล่องสุ่ม';
-      err.textContent = data.message === 'เปิดแล้ว'
+      document.getElementById('lb-error').textContent = data.message === 'เปิดแล้ว'
         ? '❌ กล่องนี้เปิดไปแล้วครับ'
         : '❌ ' + (data.message || 'เกิดข้อผิดพลาด');
     }
   } catch(e) {
     btn.disabled    = false;
     btn.textContent = '🎁 เปิดกล่องสุ่ม';
-    err.textContent = '❌ เกิดข้อผิดพลาด กรุณาลองใหม่';
+    document.getElementById('lb-error').textContent = '❌ ' + e.message;
   }
 }
 init();
