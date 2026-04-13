@@ -196,13 +196,29 @@
 <!-- ===== LOOT BOX ===== -->
 <div class="page" id="page-loot-box">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;padding:24px;text-align:center">
-    <div id="lb-ready">
+
+    <!-- step 1: เลือกกล่อง -->
+    <div id="lb-pick">
+      <div style="font-size:20px;font-weight:700;color:#1F2937;margin-bottom:8px">🎁 กล่องสุ่มพิเศษ</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:24px">เลือก 1 กล่องเพื่อเปิดครับ</div>
+      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px">
+        <div onclick="selectAndReveal(0)" style="width:90px;height:90px;background:#FAEEDA;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:48px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.08)" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🎁</div>
+        <div onclick="selectAndReveal(1)" style="width:90px;height:90px;background:#FAEEDA;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:48px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.08)" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🎁</div>
+        <div onclick="selectAndReveal(2)" style="width:90px;height:90px;background:#FAEEDA;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:48px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.08)" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🎁</div>
+      </div>
+      <div id="lb-pick-error" style="color:#DC2626;font-size:13px"></div>
+    </div>
+
+    <!-- step 2: เปิดกล่อง (แบบเดิม) -->
+    <div id="lb-ready" style="display:none">
       <div id="lb-box" style="width:120px;height:120px;background:#FAEEDA;border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:64px">🎁</div>
       <div style="font-size:20px;font-weight:700;color:#1F2937;margin-bottom:8px">กล่องสุ่มพิเศษ</div>
-      <div style="font-size:14px;color:#6B7280;margin-bottom:16px;line-height:1.6">เช็คอินครบ 28 วัน<br>กดเปิดเพื่อรับส่วนลดทันที</div>
+      <div style="font-size:14px;color:#6B7280;margin-bottom:20px">กดเปิดเพื่อรับส่วนลดทันทีครับ</div>
       <button id="lb-open-btn" onclick="doOpenLootBox()" style="width:100%;padding:14px;background:#7F77DD;border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🎁 เปิดกล่องสุ่ม</button>
       <div id="lb-error" style="color:#DC2626;font-size:13px;margin-top:12px"></div>
     </div>
+
+    <!-- step 3: ผลรางวัล -->
     <div id="lb-result" style="display:none">
       <div style="width:120px;height:120px;background:#D1FAE5;border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:64px">🎉</div>
       <div style="font-size:20px;font-weight:700;color:#1F2937;margin-bottom:16px">ยินดีด้วย!</div>
@@ -212,6 +228,7 @@
       </div>
       <div style="font-size:13px;color:#6B7280;line-height:1.6">ส่วนลดถูกบันทึกในบิลแล้ว<br>จะเห็นในบิลประจำเดือนครับ</div>
     </div>
+
   </div>
 </div>
 <!-- ===== TENANT DASHBOARD ===== -->
@@ -1112,9 +1129,62 @@ async function loadBillSummary() {
 
 // ── LOOT BOX ──
 let lootRoom = '', lootToken = '';
+
 async function initLootBox(room, token) {
   lootRoom  = room  || '';
   lootToken = token || '';
+}
+
+async function loadLootBoxes() {
+  const params = new URLSearchParams(location.search);
+  const room   = params.get('room');
+  if (!room) return;
+
+  lootRoom = room;
+
+  try {
+    const data  = await callGAS('getLootBoxes', { room });
+    const boxes = data.boxes || [];
+
+    if (boxes.length === 0) {
+      document.getElementById('lb-pick').innerHTML = `
+        <div style="font-size:48px;margin-bottom:12px">📭</div>
+        <div style="font-size:16px;font-weight:700;color:#374151;margin-bottom:8px">ยังไม่มีกล่องครับ</div>
+        <div style="font-size:13px;color:#9CA3AF;line-height:1.6">เช็คอินติดต่อกันครบ 7, 14, 21, 28 วัน<br>เพื่อรับกล่องสุ่มครับ</div>`;
+      return;
+    }
+
+    // ✅ เก็บ token ไว้ใช้ตอนกด (วน loop ถ้ามีหลายกล่อง)
+    window._lootBoxes = boxes;
+
+  } catch(e) {
+    document.getElementById('lb-pick-error').textContent = '❌ โหลดไม่ได้ กรุณาลองใหม่';
+  }
+}
+
+function selectAndReveal(idx) {
+  const boxes = window._lootBoxes || [];
+  if (!boxes.length) { 
+    document.getElementById('lb-pick-error').textContent = '❌ ไม่พบกล่องครับ'; 
+    return; 
+  }
+
+  // ✅ วน token ตาม idx ถ้ามีน้อยกว่า 3 ก็วนซ้ำ
+  const box    = boxes[idx % boxes.length];
+  lootToken    = box.token;
+
+  // animation กล่องที่เลือก
+  const boxEls = document.querySelectorAll('#lb-pick > div:nth-child(3) > div');
+  boxEls.forEach((b, i) => {
+    b.style.opacity   = i === idx ? '1' : '0.3';
+    b.style.transform = i === idx ? 'scale(1.15)' : 'scale(0.9)';
+  });
+
+  // หน่วงแล้วเปลี่ยนหน้า
+  setTimeout(() => {
+    document.getElementById('lb-pick').style.display  = 'none';
+    document.getElementById('lb-ready').style.display = 'block';
+  }, 400);
 }
 
 async function doOpenLootBox() {
