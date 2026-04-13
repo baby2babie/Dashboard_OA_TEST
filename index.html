@@ -1115,17 +1115,6 @@ let lootRoom = '', lootToken = '';
 async function initLootBox(room, token) {
   lootRoom  = room  || '';
   lootToken = token || '';
-  โหลด prize pool มาแสดง
-  try {
-    const data = await callGAS('getLootPrizeList');
-    if (data.success && data.prizes) {
-      const icons = ['🟢','🟡','🟠','🔴'];
-      document.getElementById('lb-prize-list').innerHTML = data.prizes
-        .map((p, i) => ${icons[Math.min(i, 3)]} ${p.prize_name} (${p.pct}%))
-        .join('<br>');
-    }
-  } 
-  catch(e) {}
 }
 
 async function doOpenLootBox() {
