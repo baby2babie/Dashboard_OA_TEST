@@ -225,11 +225,11 @@
           <div id="lb-popup-title" style="font-size:18px;font-weight:700;color:#1F2937;margin-bottom:6px"></div>
           <div id="lb-popup-sub" style="font-size:13px;color:#6B7280;margin-bottom:16px;line-height:1.6"></div>
 
-          <!-- โอกาสได้รับ -->
-          <div style="background:#F5F3FF;border-radius:12px;padding:12px 16px;margin-bottom:20px;text-align:left">
+          <!-- <!-- โอกาสได้รับ -->
+          <!-- <div style="background:#F5F3FF;border-radius:12px;padding:12px 16px;margin-bottom:20px;text-align:left">
             <div style="font-size:12px;color:#6B7280;margin-bottom:6px">โอกาสได้รับ</div>
             <div id="lb-popup-prize-list" style="font-size:13px;color:#4F46E5;line-height:1.8"></div>
-          </div>
+          </div> --> -->
 
           <button onclick="doOpenLootBox()" style="width:100%;padding:14px;background:#7F77DD;border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🎁 เปิดกล่องนี้</button>
           <button onclick="closePopup()" style="width:100%;padding:12px;background:none;border:none;color:#9CA3AF;font-size:14px;font-family:Sarabun,sans-serif;cursor:pointer;margin-top:8px">ยกเลิก</button>
@@ -1189,34 +1189,34 @@ async function loadLootBoxes() {
   }
 }
 
-async function openBoxPopup(token, tier) {
-  currentToken = token;
-  currentTier  = tier;
-  const cfg    = TIER_CONFIG[tier] || TIER_CONFIG[28];
+// async function openBoxPopup(token, tier) {
+//   currentToken = token;
+//   currentTier  = tier;
+//   const cfg    = TIER_CONFIG[tier] || TIER_CONFIG[28];
 
-  document.getElementById('lb-popup-box-icon').style.background = cfg.bg;
-  document.getElementById('lb-popup-box-icon').textContent       = cfg.emoji;
-  document.getElementById('lb-popup-title').textContent          = `กล่อง${cfg.label}`;
-  document.getElementById('lb-popup-sub').textContent            = cfg.sub;
-  document.getElementById('lb-popup-ready').style.display        = 'block';
-  document.getElementById('lb-popup-result').style.display       = 'none';
-  document.getElementById('lb-error').textContent                = '';
-  document.getElementById('lb-popup-prize-list').textContent     = 'กำลังโหลด...';
+//   document.getElementById('lb-popup-box-icon').style.background = cfg.bg;
+//   document.getElementById('lb-popup-box-icon').textContent       = cfg.emoji;
+//   document.getElementById('lb-popup-title').textContent          = `กล่อง${cfg.label}`;
+//   document.getElementById('lb-popup-sub').textContent            = cfg.sub;
+//   document.getElementById('lb-popup-ready').style.display        = 'block';
+//   document.getElementById('lb-popup-result').style.display       = 'none';
+//   document.getElementById('lb-error').textContent                = '';
+//   document.getElementById('lb-popup-prize-list').textContent     = 'กำลังโหลด...';
 
-  document.getElementById('lb-popup').style.display = 'flex';
+//   document.getElementById('lb-popup').style.display = 'flex';
 
-  try {
-    const data = await callGAS('getLootPrizeList', { tier });
-    if (data.success && data.prizes) {
-      const icons = ['🟢','🟡','🟠','🔴','🔴'];
-      document.getElementById('lb-popup-prize-list').innerHTML = data.prizes
-        .map((p, i) => `${icons[Math.min(i, 4)]} ${p.prize_name} (${p.pct}%)`)
-        .join('<br>');
-    }
-  } catch(e) {
-    document.getElementById('lb-popup-prize-list').textContent = '-';
-  }
-}
+//   try {
+//     const data = await callGAS('getLootPrizeList', { tier });
+//     if (data.success && data.prizes) {
+//       const icons = ['🟢','🟡','🟠','🔴','🔴'];
+//       document.getElementById('lb-popup-prize-list').innerHTML = data.prizes
+//         .map((p, i) => `${icons[Math.min(i, 4)]} ${p.prize_name} (${p.pct}%)`)
+//         .join('<br>');
+//     }
+//   } catch(e) {
+//     document.getElementById('lb-popup-prize-list').textContent = '-';
+//   }
+// }
 
 async function doOpenLootBox() {
   if (!currentToken) return;
