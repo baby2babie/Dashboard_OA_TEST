@@ -476,9 +476,10 @@ function fetchLiffProfile() {
 async function init() {
   const params = new URLSearchParams(window.location.search);
   const room   = params.get('room');
-  const token  = params.get('token'); // ← เพิ่ม
+  const token  = params.get('token');
+  const page   = params.get('page'); // ✅ เพิ่ม
 
-  if (token) {
+  if (token || page === 'loot') {
     // ══ LOOT BOX MODE ══
     document.getElementById('bottom-nav').style.display = 'none';
     document.getElementById('page-title').textContent   = '🎁 กล่องของฉัน';
@@ -1153,35 +1154,46 @@ let currentTier  = null;
 
 async function loadLootBoxes() {
   const params = new URLSearchParams(location.search);
-  const room   = params.get("room");
-  if (!room) return;
-
-  const data  = await callGAS("getLootBoxes", { room });
-  const boxes = data.boxes || [];
-
-  const grid  = document.getElementById("lb-boxes-grid");
-  const empty = document.getElementById("lb-empty");
-  const sub   = document.getElementById("lb-subtitle");
-
-  if (boxes.length === 0) {
-    grid.style.display  = "none";
-    empty.style.display = "block";
-    sub.textContent     = "ยังไม่มีกล่องที่รอเปิด";
+  const room   = params.get('room');
+  
+  if (!room) {
+    document.getElementById('lb-subtitle').textContent = 'ไม่พบข้อมูลห้อง';
     return;
   }
 
-  sub.textContent    = `มี ${boxes.length} กล่องรอเปิดอยู่`;
-  grid.style.display = "grid";
-  grid.innerHTML     = boxes.map(b => {
-    const cfg = TIER_CONFIG[b.tier] || TIER_CONFIG[28];
-    return `
-      <div onclick="openBoxPopup('${b.token}', ${b.tier})"
-        style="background:${cfg.bg};border-radius:16px;padding:16px 8px;text-align:center;cursor:pointer">
-        <div style="font-size:40px;margin-bottom:8px">${cfg.emoji}</div>
-        <div style="font-size:12px;font-weight:700;color:${cfg.color}">${cfg.label}</div>
-        <div style="font-size:11px;color:#9CA3AF;margin-top:2px">${cfg.sub}</div>
-      </div>`;
-  }).join("");
+  document.getElementById('lb-subtitle').textContent = 'กำลังโหลด...';
+  
+  try {
+    const data  = await callGAS('getLootBoxes', { room });
+    const boxes = data.boxes || [];
+
+    const grid  = document.getElementById('lb-boxes-grid');
+    const empty = document.getElementById('lb-empty');
+    const sub   = document.getElementById('lb-subtitle');
+
+    if (boxes.length === 0) {
+      grid.style.display  = 'none';
+      empty.style.display = 'block';
+      sub.textContent     = 'ยังไม่มีกล่องที่รอเปิด';
+      return;
+    }
+
+    sub.textContent    = `มี ${boxes.length} กล่องรอเปิดอยู่`;
+    grid.style.display = 'grid';
+    grid.innerHTML     = boxes.map(b => {
+      const cfg = TIER_CONFIG[b.tier] || TIER_CONFIG[28];
+      return `
+        <div onclick="openBoxPopup('${b.token}', ${b.tier})"
+          style="background:${cfg.bg};border-radius:16px;padding:16px 8px;text-align:center;cursor:pointer">
+          <div style="font-size:40px;margin-bottom:8px">${cfg.emoji}</div>
+          <div style="font-size:12px;font-weight:700;color:${cfg.color}">${cfg.label}</div>
+          <div style="font-size:11px;color:#9CA3AF;margin-top:2px">${cfg.sub}</div>
+        </div>`;
+    }).join('');
+
+  } catch(e) {
+    document.getElementById('lb-subtitle').textContent = '❌ โหลดไม่ได้ กรุณาลองใหม่';
+  }
 }
 
 const TIER_CONFIG = {
@@ -1232,7 +1244,9 @@ async function doOpenLootBox() {
   }, 80);
 
   try {
-    const data = await callGAS("openLootBox", { token: currentToken });
+    const data = await callGAS('getLootBoxes', { room });
+const data = await callGAS('getLootPrizeList', { tier });
+const data = await callGAS('openLootBox', { token: currentToken });
     if (data.success) {
       document.getElementById("lb-amount").textContent     = `-${Number(data.discount_amount).toLocaleString("th-TH")} บาท`;
       document.getElementById("lb-prize-name").textContent = data.prize_name;
