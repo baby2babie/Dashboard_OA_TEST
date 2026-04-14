@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการผู้เช่า</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Sarabun', sans-serif; background: #E8EDF2; padding-bottom: 60px; }
+:root {
+  --bg: #E8EDF2;
+  --shadow-d: #C5CCD3;
+  --shadow-l: #FFFFFF;
+  --text-1: #1F2937;
+  --text-2: #6B7280;
+  --text-3: #9CA3AF;
+  --teal: #27A896;
+  --teal-d: #1B5E56;
+  --neu-out: 6px 6px 12px var(--shadow-d), -6px -6px 12px var(--shadow-l);
+  --neu-in: inset 4px 4px 8px var(--shadow-d), inset -4px -4px 8px var(--shadow-l);
+}
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(135deg, #1B5E56 0%, #27A896 100%);
+  padding: 20px 16px 16px;
+  color: white;
+  position: sticky; top: 0; z-index: 30;
+}
+.header h1 { font-size: 20px; font-weight: 700; }
+.header-sub { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+
+/* ── SEARCH ── */
+.search-wrap { padding: 14px 16px 0; }
+.search-box {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg); border-radius: 14px;
+  box-shadow: var(--neu-in); padding: 12px 16px;
+}
+.search-box input {
+  flex: 1; border: none; background: none; outline: none;
+  font-size: 15px; font-family: 'Sarabun', sans-serif; color: var(--text-1);
+}
+.search-box input::placeholder { color: var(--text-3); }
+.search-clear { color: var(--text-3); cursor: pointer; font-size: 18px; display: none; }
+
+/* ── FILTER ── */
+.filter-row {
+  display: flex; gap: 8px; padding: 12px 16px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-btn {
+  padding: 8px 16px; border-radius: 99px; border: none;
+  background: var(--bg); box-shadow: var(--neu-out);
+  font-size: 13px; font-weight: 700; color: var(--text-3);
+  cursor: pointer; white-space: nowrap;
+  font-family: 'Sarabun', sans-serif; transition: all 0.2s;
+}
+.filter-btn.active { box-shadow: var(--neu-in); color: var(--teal); }
+
+/* ── STATS ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 8px; padding: 0 16px 14px;
+}
+.stat-card {
+  background: var(--bg); border-radius: 14px;
+  padding: 12px 8px; box-shadow: var(--neu-out); text-align: center;
+}
+.stat-num { font-size: 22px; font-weight: 700; color: var(--text-1); line-height: 1; }
+.stat-lbl { font-size: 10px; color: var(--text-3); margin-top: 4px; }
+
+/* ── SORT BAR ── */
+.sort-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px 10px;
+}
+.sort-label { font-size: 12px; color: var(--text-3); }
+.sort-btn {
+  padding: 6px 12px; border-radius: 99px; border: none;
+  background: var(--bg); box-shadow: var(--neu-out);
+  font-size: 12px; font-weight: 700; color: var(--text-2);
+  cursor: pointer; font-family: 'Sarabun', sans-serif;
+}
+
+/* ── CARDS ── */
+.list { padding: 0 16px 20px; }
+.tenant-card {
+  background: var(--bg); border-radius: 18px;
+  padding: 14px; margin-bottom: 10px;
+  box-shadow: var(--neu-out); overflow: hidden;
+}
+.tenant-header {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+}
+.room-badge {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  flex-shrink: 0; box-shadow: var(--neu-out);
+}
+.room-no  { font-size: 19px; font-weight: 700; line-height: 1.1; }
+.room-lbl { font-size: 9px; font-weight: 700; opacity: 0.7; }
+.tenant-info { flex: 1; min-width: 0; }
+.tenant-name {
+  font-size: 15px; font-weight: 700; color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tenant-meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.role-pill {
+  font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 99px; flex-shrink: 0;
+}
+.chev {
+  font-size: 18px; color: var(--text-3); flex-shrink: 0;
+  transition: transform 0.25s; line-height: 1;
+}
+.chev.open { transform: rotate(90deg); }
+
+/* ── DETAIL ── */
+.tenant-detail {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s;
+  opacity: 0;
+}
+.tenant-detail.show {
+  max-height: 600px; opacity: 1;
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.info-box {
+  background: var(--bg); border-radius: 12px;
+  padding: 10px 12px; box-shadow: var(--neu-in);
+}
+.info-box-label { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+.info-box-val { font-size: 15px; font-weight: 700; color: var(--text-1); }
+
+.detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label { font-size: 13px; color: var(--text-2); }
+.detail-right { display: flex; align-items: center; gap: 8px; }
+.detail-val { font-size: 13px; font-weight: 700; color: var(--text-1); }
+
+.edit-btn {
+  padding: 4px 12px; border-radius: 99px; border: none;
+  background: var(--bg); box-shadow: var(--neu-out);
+  font-size: 12px; font-weight: 700; color: var(--teal);
+  cursor: pointer; font-family: 'Sarabun', sans-serif;
+}
+
+/* ── ACTION BUTTONS ── */
+.action-row { display: flex; gap: 8px; margin-top: 14px; }
+.action-btn {
+  flex: 1; padding: 11px 8px; border-radius: 12px; border: none;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: 'Sarabun', sans-serif;
+  box-shadow: var(--neu-out); transition: box-shadow 0.15s;
+}
+.action-btn:active { box-shadow: var(--neu-in); }
+.btn-tenant  { background: #DCFCE7; color: #15803D; }
+.btn-visitor { background: #FEF3C7; color: #92400E; }
+.btn-danger  { background: #FEE2E2; color: #991B1B; }
+.btn-push    { background: #EEF2FF; color: #4338CA; }
+
+/* ── MODAL ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 50;
+  align-items: flex-end; justify-content: center;
+}
+.overlay.show { display: flex; }
+.sheet {
+  background: var(--bg); border-radius: 24px 24px 0 0;
+  width: 100%; padding: 20px 16px 48px;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.sheet-handle {
+  width: 40px; height: 4px; background: var(--shadow-d);
+  border-radius: 99px; margin: 0 auto 20px;
+}
+.sheet-title { font-size: 17px; font-weight: 700; color: var(--text-1); margin-bottom: 16px; }
+.sheet-input {
+  width: 100%; padding: 14px 16px; border: none; border-radius: 14px;
+  background: var(--bg); box-shadow: var(--neu-in);
+  font-size: 16px; font-family: 'Sarabun', sans-serif;
+  color: var(--text-1); outline: none; margin-bottom: 14px;
+  appearance: none;
+}
+.sheet-save {
+  width: 100%; padding: 16px; border: none; border-radius: 99px;
+  background: linear-gradient(135deg, var(--teal), #1D4ED8);
+  color: white; font-size: 17px; font-weight: 700;
+  cursor: pointer; font-family: 'Sarabun', sans-serif;
+  transition: opacity 0.2s;
+}
+.sheet-save:disabled { opacity: 0.6; }
+.sheet-cancel {
+  width: 100%; padding: 12px; border: none; background: none;
+  color: var(--text-3); font-size: 14px; cursor: pointer;
+  font-family: 'Sarabun', sans-serif; margin-top: 8px;
+}
+
+/* confirm */
+.confirm-icon { font-size: 52px; text-align: center; margin-bottom: 10px; }
+.confirm-title { font-size: 18px; font-weight: 700; text-align: center; color: var(--text-1); margin-bottom: 8px; }
+.confirm-sub { font-size: 14px; color: var(--text-2); text-align: center; line-height: 1.7; margin-bottom: 24px; }
+.confirm-row { display: flex; gap: 10px; }
+.confirm-no  {
+  flex: 1; padding: 14px; border-radius: 14px; border: none;
+  background: var(--bg); box-shadow: var(--neu-out);
+  font-size: 15px; font-weight: 700; color: var(--text-2);
+  cursor: pointer; font-family: 'Sarabun', sans-serif;
+}
+.confirm-yes {
+  flex: 1; padding: 14px; border-radius: 14px; border: none;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: 'Sarabun', sans-serif;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: #1F2937; color: white; padding: 12px 24px;
+  border-radius: 99px; font-size: 14px; font-weight: 700;
+  opacity: 0; transition: all 0.3s; z-index: 100;
+  white-space: nowrap; pointer-events: none; max-width: 90vw;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: #DC2626; }
+.toast.success { background: #16A34A; }
+
+/* ── TAG badges ── */
+.tag-follow   { color: #16A34A; }
+.tag-unfollow { color: #9CA3AF; }
+
+/* empty/loading */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-3); }
+.empty-state .icon { font-size: 52px; margin-bottom: 14px; }
+.empty-state .msg  { font-size: 15px; }
+
+/* tier progress mini */
+.tier-bar-wrap { margin-top: 6px; }
+.tier-bar-bg {
+  height: 4px; background: var(--shadow-d); border-radius: 99px;
+  overflow: hidden; box-shadow: var(--neu-in);
+}
+.tier-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--teal), #1D4ED8); transition: width 0.5s; }
+
+/* recommendation banner */
+.rec-banner {
+  margin: 0 16px 12px;
+  background: linear-gradient(135deg, #FEF3C7, #FFFBEB);
+  border-radius: 14px; padding: 12px 14px;
+  box-shadow: var(--neu-out);
+  border-left: 4px solid #F59E0B;
+}
+.rec-title { font-size: 13px; font-weight: 700; color: #92400E; margin-bottom: 4px; }
+.rec-list  { font-size: 12px; color: #B45309; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>👥 จัดการผู้เช่า</h1>
+  <div class="header-sub" id="header-sub">กำลังโหลด...</div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span style="font-size:18px;color:var(--text-3)">🔍</span>
+    <input id="search-input" placeholder="ค้นหาห้อง หรือชื่อผู้เช่า..." oninput="onSearch()">
+    <span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
+  </div>
+</div>
+
+<div class="filter-row">
+  <button class="filter-btn active" onclick="setFilter('all',this)">ทั้งหมด</button>
+  <button class="filter-btn" onclick="setFilter('TENANT',this)">TENANT</button>
+  <button class="filter-btn" onclick="setFilter('VISITOR',this)">VISITOR</button>
+  <button class="filter-btn" onclick="setFilter('noline',this)">⚠️ ไม่มี LINE</button>
+  <button class="filter-btn" onclick="setFilter('silver',this)">🥈 Silver+</button>
+  <button class="filter-btn" onclick="setFilter('streak',this)">🔥 Streak 20+</button>
+</div>
+
+<div class="stats-row" id="stats-row">
+  <div class="stat-card">
+    <div class="stat-num" id="s-total">-</div>
+    <div class="stat-lbl">ทั้งหมด</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#16A34A" id="s-tenant">-</div>
+    <div class="stat-lbl">TENANT</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#D97706" id="s-visitor">-</div>
+    <div class="stat-lbl">VISITOR</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:#9CA3AF" id="s-noline">-</div>
+    <div class="stat-lbl">ไม่มี LINE</div>
+  </div>
+</div>
+
+<div id="rec-wrap"></div>
+
+<div class="sort-bar">
+  <span class="sort-label" id="result-count">กำลังโหลด...</span>
+  <button class="sort-btn" onclick="cycleSort()">⇅ <span id="sort-label">ห้อง</span></button>
+</div>
+
+<div class="list" id="list">
+  <div class="empty-state"><div class="icon">⏳</div><div class="msg">กำลังโหลด...</div></div>
+</div>
+
+<!-- ── MODAL: แก้ไข ── -->
+<div class="overlay" id="modal-edit" onclick="closeEdit(event)">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="edit-title">แก้ไข</div>
+    <div id="edit-body"></div>
+    <button class="sheet-save" id="edit-save" onclick="doSave()">💾 บันทึก</button>
+    <button class="sheet-cancel" onclick="document.getElementById('modal-edit').classList.remove('show')">ยกเลิก</button>
+  </div>
+</div>
+
+<!-- ── MODAL: confirm ── -->
+<div class="overlay" id="modal-confirm" onclick="closeConfirm(event)">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="confirm-icon" id="ci">⚠️</div>
+    <div class="confirm-title" id="ct">ยืนยัน</div>
+    <div class="confirm-sub" id="cs"></div>
+    <div class="confirm-row">
+      <button class="confirm-no" onclick="document.getElementById('modal-confirm').classList.remove('show')">ยกเลิก</button>
+      <button class="confirm-yes" id="cy" onclick="doConfirm()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbx57fi00n2RKu7b5jHu67vzUVwrez1cx6RhW0lvvM9cIkt6_amJzMoVJOJvrwD7imHBnA/exec';
+
+async function callGAS(action, params = {}) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action, ...params })
+  });
+  return res.json();
+}
+
+// ── STATE ──
+let allUsers      = [];
+let currentFilter = 'all';
+let currentSort   = 'room';   // room | name | streak | points
+let confirmFn     = null;
+let editFn        = null;
+
+const SORTS = ['room','name','streak','points'];
+const SORT_LABELS = { room:'ห้อง', name:'ชื่อ', streak:'Streak', points:'แต้ม' };
+
+// ── LOAD ──
+async function loadData() {
+  try {
+    const data = await callGAS('getTenantList');
+    if (!data.success) { showToast('❌ โหลดไม่ได้', 'error'); return; }
+    allUsers = data.users || [];
+    updateStats();
+    showRecommendations();
+    renderList();
+  } catch(e) {
+    document.getElementById('list').innerHTML =
+      `<div class="empty-state"><div class="icon">❌</div><div class="msg">${e.message}</div></div>`;
+  }
+}
+
+// ── STATS ──
+function updateStats() {
+  const tenant  = allUsers.filter(u => u.role === 'TENANT').length;
+  const visitor = allUsers.filter(u => u.role === 'VISITOR').length;
+  const noline  = allUsers.filter(u => u.status !== 'Follow').length;
+  document.getElementById('s-total').textContent   = allUsers.length;
+  document.getElementById('s-tenant').textContent  = tenant;
+  document.getElementById('s-visitor').textContent = visitor;
+  document.getElementById('s-noline').textContent  = noline;
+  document.getElementById('header-sub').textContent =
+    `${allUsers.length} คน · ${tenant} TENANT · ${noline} ไม่มี LINE`;
+}
+
+// ── RECOMMENDATIONS ──
+function showRecommendations() {
+  const recs = [];
+  const noLine   = allUsers.filter(u => u.role === 'TENANT' && u.status !== 'Follow');
+  const highStreak = allUsers.filter(u => u.streak >= 20);
+
+  if (noLine.length > 0)
+    recs.push(`⚠️ มีผู้เช่า ${noLine.length} ห้องที่ยังไม่ได้ผูก LINE (${noLine.map(u=>u.roomNo).join(', ')})`);
+  if (highStreak.length > 0)
+    recs.push(`🔥 มี ${highStreak.length} ห้อง streak สูง — ใกล้ได้กล่องสุ่มแล้ว!`);
+
+  const wrap = document.getElementById('rec-wrap');
+  if (!recs.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div class="rec-banner">
+      <div class="rec-title">💡 แนะนำ</div>
+      <div class="rec-list">${recs.join('<br>')}</div>
+    </div>`;
+}
+
+// ── FILTER / SORT / SEARCH ──
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function cycleSort() {
+  const idx = SORTS.indexOf(currentSort);
+  currentSort = SORTS[(idx + 1) % SORTS.length];
+  document.getElementById('sort-label').textContent = SORT_LABELS[currentSort];
+  renderList();
+}
+
+function onSearch() {
+  const q = document.getElementById('search-input').value;
+  document.getElementById('search-clear').style.display = q ? 'block' : 'none';
+  renderList();
+}
+
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  renderList();
+}
+
+function getFiltered() {
+  const q      = document.getElementById('search-input').value.trim().toLowerCase();
+  const silver = ['Silver','Gold','Platinum','Diamond','Legend'];
+
+  return allUsers.filter(u => {
+    const matchQ = !q
+      || String(u.roomNo).includes(q)
+      || u.name.toLowerCase().includes(q);
+    if (!matchQ) return false;
+
+    if (currentFilter === 'all')     return true;
+    if (currentFilter === 'TENANT')  return u.role === 'TENANT';
+    if (currentFilter === 'VISITOR') return u.role === 'VISITOR';
+    if (currentFilter === 'noline')  return u.status !== 'Follow';
+    if (currentFilter === 'silver')  return silver.includes(u.tierLabel);
+    if (currentFilter === 'streak')  return u.streak >= 20;
+    return true;
+  }).sort((a, b) => {
+    if (currentSort === 'room')   return Number(a.roomNo) - Number(b.roomNo);
+    if (currentSort === 'name')   return a.name.localeCompare(b.name, 'th');
+    if (currentSort === 'streak') return b.streak - a.streak;
+    if (currentSort === 'points') return b.points - a.points;
+    return 0;
+  });
+}
+
+// ── RENDER ──
+function renderList() {
+  const filtered = getFiltered();
+  document.getElementById('result-count').textContent = `แสดง ${filtered.length} รายการ`;
+
+  if (!filtered.length) {
+    document.getElementById('list').innerHTML =
+      `<div class="empty-state"><div class="icon">🔍</div><div class="msg">ไม่พบผู้ใช้</div></div>`;
+    return;
+  }
+  document.getElementById('list').innerHTML = filtered.map(buildCard).join('');
+}
+
+function buildCard(u) {
+  const isTenant = u.role === 'TENANT';
+  const isFollow = u.status === 'Follow';
+  const roleBg   = isTenant ? '#DCFCE7' : u.role === 'ADMIN' ? '#EEF2FF' : '#FEF3C7';
+  const roleClr  = isTenant ? '#15803D' : u.role === 'ADMIN' ? '#4338CA' : '#92400E';
+  const roomBg   = TIER_BG[u.tierLabel] || '#F3F4F6';
+  const roomClr  = u.tierColor || '#6B7280';
+
+  // streak bar (ครบ 28)
+  const streakPct  = Math.min(Math.round((u.streak / 28) * 100), 100);
+  const nextBox    = u.streak >= 28 ? '🎁 ครบแล้ว!' : `อีก ${28 - u.streak} วัน`;
+
+  return `
+<div class="tenant-card" id="card-${u.userId}">
+  <div class="tenant-header" onclick="toggleCard('${u.userId}')">
+    <div class="room-badge" style="background:${roomBg}">
+      <span class="room-lbl" style="color:${roomClr}">ห้อง</span>
+      <span class="room-no" style="color:${roomClr}">${u.roomNo || '-'}</span>
+    </div>
+    <div class="tenant-info">
+      <div class="tenant-name" style="${!isFollow ? 'color:#9CA3AF':''}">${u.name || 'ไม่มีชื่อ'}</div>
+      <div class="tenant-meta">${u.tierEmoji} ${u.tierLabel} · ${u.tierDur || '-'}</div>
+    </div>
+    <span class="role-pill" style="background:${roleBg};color:${roleClr}">${u.role}</span>
+    <span class="chev" id="chev-${u.userId}">›</span>
+  </div>
+
+  <div class="tenant-detail" id="detail-${u.userId}">
+
+    <!-- stats grid -->
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-box-label">🔥 Streak</div>
+        <div class="info-box-val">${u.streak} วัน</div>
+        <div class="tier-bar-wrap">
+          <div class="tier-bar-bg"><div class="tier-bar-fill" style="width:${streakPct}%"></div></div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:3px">${nextBox}</div>
+        </div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-label">💎 แต้มเดือนนี้</div>
+        <div class="info-box-val">${u.points} บาท</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-label">📶 LINE</div>
+        <div class="info-box-val ${isFollow ? 'tag-follow' : 'tag-unfollow'}">
+          ${isFollow ? '● Follow' : '○ Unfollow'}
+        </div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-label">🏆 Tier Progress</div>
+        <div class="info-box-val" style="font-size:13px">${u.tierEmoji} → ${u.tierNextEmoji || '👑'} ${u.tierNextLabel || 'Legend'}</div>
+        ${u.tierMonthsLeft ? `<div style="font-size:10px;color:var(--text-3);margin-top:3px">อีก ${u.tierMonthsLeft} เดือน</div>` : ''}
+      </div>
+    </div>
+
+    <!-- detail rows -->
+    <div class="detail-row">
+      <span class="detail-label">ห้อง</span>
+      <div class="detail-right">
+        <span class="detail-val">${u.roomNo || '-'}</span>
+        <button class="edit-btn" onclick="openEditRoom('${u.userId}','${u.roomNo}')">แก้ไข</button>
+      </div>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Role</span>
+      <div class="detail-right">
+        <span class="detail-val">${u.role}</span>
+        <button class="edit-btn" onclick="openEditRole('${u.userId}','${u.role}')">แก้ไข</button>
+      </div>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Tier</span>
+      <span class="detail-val">${u.tierEmoji} ${u.tierLabel} (${u.tierDur || '-'})</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">สถานะ LINE</span>
+      <span class="detail-val ${isFollow ? 'tag-follow' : 'tag-unfollow'}">${isFollow ? '● Follow' : '○ Unfollow'}</span>
+    </div>
+
+    <!-- actions -->
+    <div class="action-row">
+      ${isTenant
+        ? `<button class="action-btn btn-visitor" onclick="confirmAction('role','${u.userId}','${u.name}','VISITOR')">→ VISITOR</button>`
+        : `<button class="action-btn btn-tenant"  onclick="confirmAction('role','${u.userId}','${u.name}','TENANT')">→ TENANT</button>`
+      }
+      <button class="action-btn btn-danger" onclick="confirmAction('unlink','${u.userId}','${u.name}','')">🗑 ล้าง LINE</button>
+    </div>
+
+  </div>
+</div>`;
+}
+
+const TIER_BG = {
+  Member: '#F3F4F6', Silver: '#F3F4F6', Gold: '#FFFBEB',
+  Platinum: '#F3E8FF', Diamond: '#E1F5EE', Legend: '#FEF3C7'
+};
+
+function toggleCard(uid) {
+  const d = document.getElementById('detail-' + uid);
+  const c = document.getElementById('chev-'   + uid);
+  if (!d) return;
+  d.classList.toggle('show');
+  c.classList.toggle('open');
+}
+
+// ── EDIT MODALS ──
+let _editCtx = {};
+
+function openEditRole(userId, currentRole) {
+  _editCtx = { type: 'role', userId };
+  document.getElementById('edit-title').textContent = '✏️ แก้ไข Role';
+  document.getElementById('edit-body').innerHTML = `
+    <select class="sheet-input" id="edit-val">
+      <option value="TENANT"  ${currentRole==='TENANT'  ?'selected':''}>TENANT — ผู้เช่า</option>
+      <option value="VISITOR" ${currentRole==='VISITOR' ?'selected':''}>VISITOR — ทั่วไป</option>
+      <option value="PARTNER" ${currentRole==='PARTNER' ?'selected':''}>PARTNER — หุ้นส่วน</option>
+      <option value="ADMIN"   ${currentRole==='ADMIN'   ?'selected':''}>ADMIN — ผู้ดูแล</option>
+    </select>`;
+  document.getElementById('modal-edit').classList.add('show');
+}
+
+function openEditRoom(userId, currentRoom) {
+  _editCtx = { type: 'room', userId };
+  document.getElementById('edit-title').textContent = '✏️ แก้ไขห้อง';
+  document.getElementById('edit-body').innerHTML = `
+    <input class="sheet-input" id="edit-val" type="text"
+      value="${currentRoom || ''}" placeholder="เช่น 101, 205">`;
+  document.getElementById('modal-edit').classList.add('show');
+}
+
+async function doSave() {
+  const val = document.getElementById('edit-val')?.value?.trim();
+  if (!val) return;
+  const btn = document.getElementById('edit-save');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+  try {
+    let result;
+    if (_editCtx.type === 'role')
+      result = await callGAS('updateUserRole', { userId: _editCtx.userId, newRole: val });
+    else
+      result = await callGAS('updateUserRoom', { userId: _editCtx.userId, newRoom: val });
+
+    if (result.success) {
+      showToast('✅ บันทึกเรียบร้อยครับ', 'success');
+      document.getElementById('modal-edit').classList.remove('show');
+      await loadData();
+    } else showToast('❌ ' + (result.message || 'เกิดข้อผิดพลาด'), 'error');
+  } catch(e) { showToast('❌ ' + e.message, 'error'); }
+  btn.disabled = false; btn.textContent = '💾 บันทึก';
+}
+
+function closeEdit(e) {
+  if (e.target === document.getElementById('modal-edit'))
+    document.getElementById('modal-edit').classList.remove('show');
+}
+
+// ── CONFIRM ──
+let _confirmCtx = {};
+
+function confirmAction(type, userId, name, val) {
+  _confirmCtx = { type, userId, val };
+  const isUnlink = type === 'unlink';
+  const isTenant = val === 'TENANT';
+
+  document.getElementById('ci').textContent = isUnlink ? '🗑️' : isTenant ? '✅' : '⚠️';
+  document.getElementById('ct').textContent = isUnlink ? 'ล้างข้อมูล LINE' : `เปลี่ยนเป็น ${val}`;
+  document.getElementById('cs').textContent = isUnlink
+    ? `${name}\nจะถูก reset เป็น VISITOR และยกเลิกการผูกห้องทั้งหมดครับ`
+    : `${name}\nจะถูกเปลี่ยน Role เป็น ${val} ครับ`;
+
+  const btn = document.getElementById('cy');
+  btn.textContent = isUnlink ? '🗑️ ล้างข้อมูล' : '✅ ยืนยัน';
+  btn.style.background = isUnlink ? '#FEE2E2' : isTenant ? '#DCFCE7' : '#FEF3C7';
+  btn.style.color      = isUnlink ? '#991B1B' : isTenant ? '#15803D' : '#92400E';
+
+  document.getElementById('modal-confirm').classList.add('show');
+}
+
+async function doConfirm() {
+  document.getElementById('modal-confirm').classList.remove('show');
+  const { type, userId, val } = _confirmCtx;
+  try {
+    let result;
+    if (type === 'role')   result = await callGAS('updateUserRole', { userId, newRole: val });
+    if (type === 'unlink') result = await callGAS('unlinkUser', { userId });
+
+    if (result.success) {
+      showToast('✅ เรียบร้อยครับ', 'success');
+      await loadData();
+    } else showToast('❌ ' + (result.message || 'เกิดข้อผิดพลาด'), 'error');
+  } catch(e) { showToast('❌ ' + e.message, 'error'); }
+}
+
+function closeConfirm(e) {
+  if (e.target === document.getElementById('modal-confirm'))
+    document.getElementById('modal-confirm').classList.remove('show');
+}
+
+// ── TOAST ──
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = `toast show ${type}`;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+loadData();
+</script>
+</body>
+</html>
