@@ -1164,7 +1164,7 @@ async function doOpenLootBox() {
   }
 }
 function openTenantManage() {
-  const url = 'https://YOUR_DOMAIN/tenant-manage.html';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbx57fi00n2RKu7b5jHu67vzUVwrez1cx6RhW0lvvM9cIkt6_amJzMoVJOJvrwD7imHBnA/exec';
   if (typeof liff !== 'undefined' && liff.isInClient()) {
     liff.openWindow({ url, external: false });
   } else {
