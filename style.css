@@ -258,3 +258,41 @@ input[type=number].error-input { box-shadow: var(--neu-in), 0 0 0 3px rgba(220,3
 }
 .drawer-item-label { font-size: 14px; font-weight: 700; color: var(--text-1); }
 .drawer-item-sub   { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+/* ===== LOOTBOX ===== */
+.lb-card { background:#1E293B; border:1px solid #334155; border-radius:20px; padding:24px 16px 20px; text-align:center; cursor:pointer; transition:transform 0.15s; }
+.lb-card:active:not(.used):not(.locked) { transform:scale(0.96); }
+.lb-card.used   { opacity:0.4; cursor:not-allowed; filter:grayscale(1); }
+.lb-card.locked { opacity:0.3; cursor:not-allowed; }
+.lb-circle { width:80px; height:80px; border-radius:50%; border:3px solid; display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 14px; }
+.lb-circle.gold   { background:rgba(245,158,11,0.15); border-color:#F59E0B; }
+.lb-circle.teal   { background:rgba(20,184,166,0.15);  border-color:#14B8A6; }
+.lb-circle.purple { background:rgba(139,92,246,0.15);  border-color:#8B5CF6; }
+.lb-circle.red    { background:rgba(239,68,68,0.15);   border-color:#EF4444; }
+.lb-name { font-size:15px; font-weight:700; color:#F1F5F9; }
+.lb-desc { font-size:12px; color:#94A3B8; margin-top:4px; }
+.lb-ms   { font-size:11px; font-weight:700; margin-top:10px; padding:4px 10px; border-radius:99px; display:inline-block; }
+.lb-ms.gold   { background:rgba(245,158,11,0.2); color:#F59E0B; }
+.lb-ms.teal   { background:rgba(20,184,166,0.2); color:#14B8A6; }
+.lb-ms.purple { background:rgba(139,92,246,0.2); color:#A78BFA; }
+.lb-ms.red    { background:rgba(239,68,68,0.2);  color:#FCA5A5; }
+
+/* LOOTBOX POPUP */
+.lb-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; }
+.lb-overlay.show { display:flex; }
+.lb-popup { background:#1E293B; border:1px solid #334155; border-radius:24px; width:calc(100% - 48px); max-width:320px; padding:32px 24px 28px; text-align:center; animation:lbPopIn 0.3s cubic-bezier(.175,.885,.32,1.275); }
+@keyframes lbPopIn { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+.lb-spin-wrap { width:100px; height:100px; margin:0 auto 20px; position:relative; }
+.lb-spin-ring { width:100px; height:100px; border-radius:50%; border:4px solid rgba(255,255,255,0.1); border-top-color:#F59E0B; position:absolute; animation:lbSpin 0.8s linear infinite; }
+@keyframes lbSpin { to{transform:rotate(360deg)} }
+.lb-spin-icon { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:44px; animation:lbBounce 0.5s ease infinite alternate; }
+@keyframes lbBounce { from{transform:scale(0.9)} to{transform:scale(1.1)} }
+.lb-result { display:none; }
+.lb-result.show { display:block; animation:lbFade 0.4s ease; }
+@keyframes lbFade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.lb-confirm-btn { width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg,#14B8A6,#1D4ED8); color:white; font-size:17px; font-weight:700; font-family:'Sarabun',sans-serif; cursor:pointer; }
+
+/* CONFETTI */
+.lb-confetti { position:fixed; inset:0; pointer-events:none; z-index:110; display:none; }
+.lb-confetti.show { display:block; }
+.lb-dot { position:absolute; border-radius:2px; animation:lbFall linear forwards; }
+@keyframes lbFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
