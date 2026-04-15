@@ -1154,7 +1154,7 @@ function startLootOpen(milestone, name, token) {
         const card = document.getElementById('lb-card-' + milestone);
         if (card) {
           card.classList.add('used');
-          card.querySelector('.lb-circle').innerHTML = `<div class="lb-arc ${LB_CONFIG.find(c=>c.milestone===milestone)?.theme}"></div>✅`;
+          card.querySelector('.lb-circle').innerHTML = `<div class="lb-arc ${LB_CONFIG.find(c=>c.milestone===milestone)?.theme}"></div>🎁`;
           card.querySelector('.lb-desc').textContent = 'เปิดแล้ว';
           card.onclick = null;
         }
