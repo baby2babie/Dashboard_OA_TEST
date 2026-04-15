@@ -9,6 +9,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <meta name="theme-color" content="#E8EDF2">
+<style>
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.85) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+</style>
 </head>
 <body>
 
@@ -193,28 +199,21 @@
   </div>
 </div>
 
-<!-- ===== LOOTBOX (dark theme, เชื่อม GAS จริง) ===== -->
+<!-- ===== LOOTBOX ===== -->
 <div class="page" id="page-lootbox">
-
-  <!-- header -->
   <div class="lb-page-header">
     <div class="lb-page-title">🎁 กล่องสุ่มรางวัล</div>
     <div class="lb-page-sub">สะสมจากการเช็คอินติดต่อกัน</div>
     <div class="lb-room-label" id="lb-room-label"></div>
   </div>
-
-  <!-- box count -->
   <div class="lb-count-wrap">
     <div class="lb-count-badge">
       🎁 กล่องที่มี: <span id="lb-count">0</span> ใบ
     </div>
   </div>
-
-  <!-- grid -->
   <div class="lb-grid" id="lb-grid">
     <div style="grid-column:1/-1;text-align:center;color:#94A3B8;padding:30px">⏳ กำลังโหลด...</div>
   </div>
-
 </div>
 
 <!-- ===== TENANT DASHBOARD ===== -->
@@ -414,21 +413,21 @@
 // ============================================================
 //  CONFIG
 // ============================================================
-const GAS_URL  = 'https://script.google.com/macros/s/AKfycbx57fi00n2RKu7b5jHu67vzUVwrez1cx6RhW0lvvM9cIkt6_amJzMoVJOJvrwD7imHBnA/exec';
-const LIFF_ID  = '2009695321-KkMAkdaz';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbx57fi00n2RKu7b5jHu67vzUVwrez1cx6RhW0lvvM9cIkt6_amJzMoVJOJvrwD7imHBnA/exec';
+const LIFF_ID = '2009695321-KkMAkdaz';
 let   userRole = 'ADMIN';
 
 // lootbox state
-let lbOpening    = false;
-let lbUserId     = '';   // LINE userId สำหรับ LIFF mode
+let lbOpening   = false;
+let lbUserId    = '';
 
-// lootbox config (ตรงกับ GAS milestone)
-const LB_CONFIG = [
-  { milestone: 7,  name: 'กล่องเงิน',     desc: 'ส่วนลด 5–20 บาท',   theme: 'gold',   ms: 'ms-gold'   },
-  { milestone: 14, name: 'กล่องทอง',      desc: 'ส่วนลด 10–50 บาท',  theme: 'teal',   ms: 'ms-teal'   },
-  { milestone: 21, name: 'กล่องแพลตินัม', desc: 'ส่วนลด 30–100 บาท', theme: 'purple', ms: 'ms-purple' },
-  { milestone: 28, name: 'กล่องตำนาน',    desc: 'ส่วนลด 50–200 บาท', theme: 'red',    ms: 'ms-red'    },
-];
+// ── Tier meta สำหรับ render กล่อง ──
+const TIER_META = {
+   7: { name: 'กล่องเงิน',     desc: 'ส่วนลด 5–20 บาท',   theme: 'gold',   emoji: '🥈' },
+  14: { name: 'กล่องทอง',      desc: 'ส่วนลด 10–50 บาท',  theme: 'teal',   emoji: '🥇' },
+  21: { name: 'กล่องแพลตินัม', desc: 'ส่วนลด 30–100 บาท', theme: 'purple', emoji: '💎' },
+  28: { name: 'กล่องตำนาน',    desc: 'ส่วนลด 50–200 บาท', theme: 'red',    emoji: '👑' },
+};
 
 // ============================================================
 //  UTILS
@@ -464,10 +463,10 @@ function formatThaiMonthShort(k) {
 }
 
 // ============================================================
-//  LIFF — init ก่อนใช้เสมอ
+//  LIFF
 // ============================================================
-let liffReady    = false;
-let liffProfile  = null;
+let liffReady   = false;
+let liffProfile = null;
 
 async function initLiff() {
   try {
@@ -506,7 +505,6 @@ async function fetchLiffProfile() {
 //  INIT
 // ============================================================
 async function init() {
-  // เริ่ม LIFF ก่อนเสมอ (non-blocking)
   await initLiff();
 
   const params = new URLSearchParams(window.location.search);
@@ -514,7 +512,6 @@ async function init() {
   const token  = params.get('token');
 
   if (token) {
-    // ── LOOT BOX MODE (เปิดจาก LINE โดยตรง) ──
     document.getElementById('bottom-nav').style.display = 'none';
     document.getElementById('page-title').textContent   = '🎁 กล่องสุ่มพิเศษ';
     document.getElementById('admin-name').textContent   = 'ห้อง ' + (room || '');
@@ -522,7 +519,6 @@ async function init() {
     openDirectLootBox(room, token);
 
   } else if (room) {
-    // ── TENANT MODE ──
     document.getElementById('bottom-nav').style.display = 'none';
     document.getElementById('page-title').textContent   = '🏠 ข้อมูลห้องของคุณ';
     document.getElementById('admin-name').textContent   = 'กำลังโหลด...';
@@ -530,7 +526,6 @@ async function init() {
     loadTenantDashboard(room, false);
 
   } else {
-    // ── ADMIN MODE ──
     switchPage('dashboard');
     initMonthSelect();
     loadDashboard();
@@ -571,9 +566,9 @@ function switchPage(page) {
 }
 
 function toggleDrawer() {
-  const d = document.getElementById('drawer');
-  const o = document.getElementById('overlay');
-  const b = document.getElementById('drawer-btn');
+  const d    = document.getElementById('drawer');
+  const o    = document.getElementById('overlay');
+  const b    = document.getElementById('drawer-btn');
   const open = d.classList.contains('open');
   d.classList.toggle('open', !open);
   o.classList.toggle('show', !open);
@@ -976,26 +971,19 @@ function renderCompareTable(data, year) {
 }
 
 // ============================================================
-//  LOOTBOX — เชื่อม GAS จริง
+//  LOOTBOX — ระบบใหม่ inventory-based
 // ============================================================
 
-/**
- * โหลด lootbox สำหรับ Admin mode (ใช้ LIFF profile)
- */
 async function loadLootBox() {
   document.getElementById('lb-grid').innerHTML =
     '<div style="grid-column:1/-1;text-align:center;color:#94A3B8;padding:30px">⏳ กำลังโหลด...</div>';
 
-  // ต้อง login LINE ก่อน
   if (!liffReady) {
     document.getElementById('lb-grid').innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;color:#EF4444;padding:30px">❌ ไม่พร้อม กรุณาเปิดผ่าน LINE ครับ</div>';
+      '<div style="grid-column:1/-1;text-align:center;color:#EF4444;padding:30px">❌ กรุณาเปิดผ่าน LINE ครับ</div>';
     return;
   }
-  if (!liff.isLoggedIn()) {
-    liff.login({ redirectUri: location.href });
-    return;
-  }
+  if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
 
   try {
     if (!liffProfile) liffProfile = await liff.getProfile();
@@ -1004,22 +992,101 @@ async function loadLootBox() {
     const result = await callGAS('getLootBoxData', { userId: lbUserId });
     if (!result.success) { showToast('❌ ' + result.message, 'error'); return; }
 
-    document.getElementById('lb-room-label').textContent = result.roomNo ? 'ห้อง ' + result.roomNo : '';
+    document.getElementById('lb-room-label').textContent =
+      result.roomNo ? 'ห้อง ' + result.roomNo : '';
     document.getElementById('lb-count').textContent = result.totalBox || 0;
-    renderLootGrid(result.boxes || {});
+
+    renderLootInventory(result.pendingBoxes || [], result.openedBoxes || []);
 
   } catch (e) {
     showToast('❌ โหลดไม่ได้', 'error');
     document.getElementById('lb-grid').innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;color:#EF4444;padding:30px">❌ โหลดข้อมูลไม่ได้</div>';
+      '<div style="grid-column:1/-1;text-align:center;color:#EF4444;padding:30px">❌ โหลดไม่ได้</div>';
   }
 }
 
-/**
- * เปิดกล่องโดยตรงจาก URL ?room=xxx&token=xxx (กดจาก LINE)
- */
+function renderLootInventory(pending, opened) {
+  const grid = document.getElementById('lb-grid');
+  grid.innerHTML = '';
+
+  // ── กรณีไม่มีกล่องเลย ──
+  if (!pending.length && !opened.length) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:40px 20px">
+        <div style="font-size:48px;margin-bottom:12px">🔒</div>
+        <div style="font-size:16px;font-weight:700;color:#F1F5F9;margin-bottom:6px">ยังไม่มีกล่องรางวัล</div>
+        <div style="font-size:13px;color:#64748B">เช็คอินติดต่อกัน 7 วัน เพื่อรับกล่องแรก</div>
+      </div>`;
+    return;
+  }
+
+  // ── กล่องที่รอเปิด ──
+  if (pending.length) {
+    const header = document.createElement('div');
+    header.style.cssText = 'grid-column:1/-1;font-size:12px;font-weight:700;color:#94A3B8;letter-spacing:1px;padding:4px 0 2px';
+    header.textContent   = '🎁 กล่องที่รอเปิด';
+    grid.appendChild(header);
+
+    pending.forEach((box, i) => {
+      const meta = TIER_META[box.tier] || TIER_META[28];
+      const card = document.createElement('div');
+      card.className = 'lb-card';
+
+      // badge เดือนถ้าข้ามเดือน
+      const now    = new Date();
+      const cur    = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2,'0');
+      const isOld  = box.monthKey && box.monthKey !== cur;
+      const monthBadge = isOld
+        ? `<div style="position:absolute;top:6px;right:6px;font-size:9px;background:#F59E0B22;color:#F59E0B;padding:2px 6px;border-radius:99px">${formatThaiMonthShort(box.monthKey)}</div>`
+        : '';
+
+      card.style.cssText   = 'position:relative;cursor:pointer;animation:popIn 0.3s ease both';
+      card.style.animationDelay = (i * 0.07) + 's';
+      card.innerHTML = `
+        ${monthBadge}
+        <div class="lb-icon-wrap">
+          <div class="lb-circle ${meta.theme}">
+            <div class="lb-arc ${meta.theme}"></div>
+            🎁
+          </div>
+        </div>
+        <div class="lb-name">${meta.name}</div>
+        <div class="lb-desc">${meta.desc}</div>
+        <div class="lb-ms ms-${meta.theme}" style="margin-top:6px">แตะเพื่อเปิด</div>`;
+
+      card.onclick = () => startLootOpen(box.tier, meta.name, box.token, card);
+      grid.appendChild(card);
+    });
+  }
+
+  // ── ประวัติที่เปิดแล้ว ──
+  if (opened.length) {
+    const divider = document.createElement('div');
+    divider.style.cssText = 'grid-column:1/-1;font-size:12px;font-weight:700;color:#475569;letter-spacing:1px;padding:16px 0 2px';
+    divider.textContent   = '✅ เปิดไปแล้ว';
+    grid.appendChild(divider);
+
+    opened.forEach(box => {
+      const meta = TIER_META[box.tier] || TIER_META[28];
+      const card = document.createElement('div');
+      card.className = 'lb-card used';
+      card.innerHTML = `
+        <div class="lb-icon-wrap">
+          <div class="lb-circle ${meta.theme}" style="opacity:0.5">
+            <div class="lb-arc ${meta.theme}"></div>
+            ${getLootIcon(box.discount_amount)}
+          </div>
+        </div>
+        <div class="lb-name" style="opacity:0.6">${meta.name}</div>
+        <div class="lb-desc" style="color:#F59E0B;font-weight:700">ได้รับ ${box.discount_amount} บาท</div>
+        <div style="font-size:10px;color:#475569;margin-top:4px">${formatThaiMonthShort(box.monthKey)}</div>`;
+      grid.appendChild(card);
+    });
+  }
+}
+
+// ── เปิดกล่องโดยตรงจาก URL ?token=xxx (กดจาก LINE) ──
 async function openDirectLootBox(room, token) {
-  // แสดง popup เปิดทันที
   document.getElementById('lb-spin-state').style.display = 'block';
   document.getElementById('lb-result-state').classList.remove('show');
   document.getElementById('lb-popup-title').textContent = 'กำลังเปิดกล่องสุ่ม...';
@@ -1030,7 +1097,6 @@ async function openDirectLootBox(room, token) {
     setTimeout(() => {
       if (!result.success) {
         document.getElementById('lb-overlay').classList.remove('show');
-        // แสดง error บน page lootbox
         document.getElementById('lb-grid').innerHTML = `
           <div style="grid-column:1/-1;text-align:center;padding:40px">
             <div style="font-size:48px;margin-bottom:16px">${result.message === 'เปิดแล้ว' ? '✅' : '❌'}</div>
@@ -1054,48 +1120,13 @@ async function openDirectLootBox(room, token) {
   }
 }
 
-/**
- * render grid 4 กล่อง จาก data ที่ได้จาก GAS
- * boxes = { 7: {token, opened}, 14: {...}, 21: {...}, 28: {...} }
- */
-function renderLootGrid(boxes) {
-  const grid = document.getElementById('lb-grid');
-  grid.innerHTML = '';
-
-  LB_CONFIG.forEach(cfg => {
-    const info     = boxes[cfg.milestone] || {};
-    const hasBox   = info.token && !info.opened;   // มีกล่อง ยังไม่เปิด
-    const isOpened = info.token &&  info.opened;   // เปิดแล้ว
-    const isLocked = !info.token;                  // ยังไม่ถึงรอบ
-    const icon     = isOpened ? '✅' : isLocked ? '🔒' : '🎁';
-
-    const card = document.createElement('div');
-    card.className = 'lb-card' + (isOpened ? ' used' : '') + (isLocked ? ' locked' : '');
-    card.id = 'lb-card-' + cfg.milestone;
-    card.innerHTML = `
-      <div class="lb-icon-wrap">
-        <div class="lb-circle ${cfg.theme}">
-          <div class="lb-arc ${cfg.theme}"></div>
-          ${icon}
-        </div>
-      </div>
-      <div class="lb-name">${cfg.name}</div>
-      <div class="lb-desc">${isOpened ? 'เปิดแล้ว' : isLocked ? 'ยังไม่ถึงรอบ' : cfg.desc}</div>
-      <div class="lb-ms ${cfg.ms}">ครบ ${cfg.milestone} วัน</div>`;
-
-    if (hasBox) {
-      card.onclick = () => startLootOpen(cfg.milestone, cfg.name, info.token);
-    }
-    grid.appendChild(card);
-  });
-}
-
-/**
- * กดเปิดกล่อง → เรียก GAS openLootBox
- */
-function startLootOpen(milestone, name, token) {
+// ── กดเปิดกล่องจาก inventory ──
+function startLootOpen(tier, name, token, cardEl) {
   if (lbOpening) return;
   lbOpening = true;
+
+  // dim card ทันที ป้องกันกดซ้ำ
+  if (cardEl) { cardEl.style.opacity = '0.4'; cardEl.style.pointerEvents = 'none'; }
 
   document.getElementById('lb-spin-state').style.display = 'block';
   document.getElementById('lb-result-state').classList.remove('show');
@@ -1107,25 +1138,18 @@ function startLootOpen(milestone, name, token) {
       setTimeout(() => {
         if (!result.success) {
           closeLootPopup();
+          if (cardEl) { cardEl.style.opacity = '1'; cardEl.style.pointerEvents = ''; }
           showToast('❌ ' + (result.message || 'เกิดข้อผิดพลาด'), 'error');
           lbOpening = false;
           return;
         }
-        // แสดงผล
         document.getElementById('lb-spin-state').style.display = 'none';
         document.getElementById('lb-result-icon').textContent   = getLootIcon(result.discount_amount);
         document.getElementById('lb-result-name').textContent   = result.prize_name;
         document.getElementById('lb-result-amount').textContent = result.discount_amount;
         document.getElementById('lb-result-state').classList.add('show');
 
-        // update card
-        const card = document.getElementById('lb-card-' + milestone);
-        if (card) {
-          card.classList.add('used');
-          card.querySelector('.lb-circle').innerHTML = `<div class="lb-arc ${LB_CONFIG.find(c=>c.milestone===milestone)?.theme}"></div>✅`;
-          card.querySelector('.lb-desc').textContent = 'เปิดแล้ว';
-          card.onclick = null;
-        }
+        // อัปเดต counter
         const cur = Number(document.getElementById('lb-count').textContent) || 0;
         document.getElementById('lb-count').textContent = Math.max(0, cur - 1);
 
@@ -1135,6 +1159,7 @@ function startLootOpen(milestone, name, token) {
     })
     .catch(() => {
       closeLootPopup();
+      if (cardEl) { cardEl.style.opacity = '1'; cardEl.style.pointerEvents = ''; }
       showToast('❌ เกิดข้อผิดพลาด', 'error');
       lbOpening = false;
     });
@@ -1148,11 +1173,14 @@ function getLootIcon(amount) {
   return '🥉';
 }
 
+// ── ปิด popup แล้ว reload grid ──
 function closeLootPopup() {
   document.getElementById('lb-overlay').classList.remove('show');
   document.getElementById('lb-confetti').classList.remove('show');
   document.getElementById('lb-confetti').innerHTML = '';
   lbOpening = false;
+  // reload grid ให้แสดงสถานะใหม่
+  loadLootBox();
 }
 
 function spawnLootConfetti() {
