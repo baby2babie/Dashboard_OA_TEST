@@ -1141,11 +1141,13 @@ function startLootOpen(milestone, name, token) {
 }
 
 function getLootIcon(amount) {
-  if (amount >= 200) return 'https://github.com/baby2babie/Dashboard_OA_TEST/blob/main/coin-bitcoin_115089.png';
-  if (amount >= 100) return 'https://github.com/baby2babie/Dashboard_OA_TEST/blob/main/coin-bitcoin_115089.png';
-  if (amount >= 50)  return 'https://github.com/baby2babie/Dashboard_OA_TEST/blob/main/coin-bitcoin_115089.png';
-  if (amount >= 20)  return 'https://github.com/baby2babie/Dashboard_OA_TEST/blob/main/coin-bitcoin_115089.png';
-  return 'https://github.com/baby2babie/Dashboard_OA_TEST/blob/main/coin-bitcoin_115089.png';
+  const base = 'https://raw.githubusercontent.com/baby2babie/Dashboard_OA_TEST/main/coin-bitcoin_115089.png';
+  
+  if (amount >= 200) return base;
+  if (amount >= 100) return base;
+  if (amount >= 50)  return base;
+  if (amount >= 20)  return base;
+  return base;
 }
 
 function closeLootPopup() {
