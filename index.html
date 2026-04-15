@@ -514,12 +514,20 @@ async function init() {
   const token  = params.get('token');
 
   if (token) {
-    // ── LOOT BOX MODE (เปิดจาก LINE โดยตรง) ──
+    // ── LOOT BOX MODE แบบเก่า (เปิดจาก URL token โดยตรง — fallback) ──
     document.getElementById('bottom-nav').style.display = 'none';
     document.getElementById('page-title').textContent   = '🎁 กล่องสุ่มพิเศษ';
     document.getElementById('admin-name').textContent   = 'ห้อง ' + (room || '');
     switchPage('lootbox');
     openDirectLootBox(room, token);
+
+  } else if (room && new URLSearchParams(window.location.search).get('loot') === '1') {
+    // ── LOOT BOX MODE ใหม่ — ?room=xxx&loot=1 → หน้า grid เลือกกล่อง ──
+    document.getElementById('bottom-nav').style.display = 'none';
+    document.getElementById('page-title').textContent   = '🎁 กล่องสุ่มรางวัล';
+    document.getElementById('admin-name').textContent   = 'ห้อง ' + room;
+    switchPage('lootbox');
+    loadLootBoxForRoom(room);  // โหลดด้วย roomNo โดยตรง (ไม่ต้องใช้ LINE userId)
 
   } else if (room) {
     // ── TENANT MODE ──
@@ -982,37 +990,61 @@ function renderCompareTable(data, year) {
 /**
  * โหลด lootbox สำหรับ Admin mode (ใช้ LIFF profile)
  */
+/**
+ * loadLootBox — Admin mode (ดึงด้วย LINE userId)
+ */
 async function loadLootBox() {
   document.getElementById('lb-grid').innerHTML =
     '<div style="grid-column:1/-1;text-align:center;color:#94A3B8;padding:30px">⏳ กำลังโหลด...</div>';
 
-  // ต้อง login LINE ก่อน
   if (!liffReady) {
     document.getElementById('lb-grid').innerHTML =
       '<div style="grid-column:1/-1;text-align:center;color:#EF4444;padding:30px">❌ ไม่พร้อม กรุณาเปิดผ่าน LINE ครับ</div>';
     return;
   }
-  if (!liff.isLoggedIn()) {
-    liff.login({ redirectUri: location.href });
-    return;
-  }
+  if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
 
   try {
     if (!liffProfile) liffProfile = await liff.getProfile();
     lbUserId = liffProfile.userId;
-
     const result = await callGAS('getLootBoxData', { userId: lbUserId });
     if (!result.success) { showToast('❌ ' + result.message, 'error'); return; }
-
-    document.getElementById('lb-room-label').textContent = result.roomNo ? 'ห้อง ' + result.roomNo : '';
-    document.getElementById('lb-count').textContent = result.totalBox || 0;
-    renderLootGrid(result.boxes || {});
-
+    _renderLootBoxPage(result);
   } catch (e) {
     showToast('❌ โหลดไม่ได้', 'error');
     document.getElementById('lb-grid').innerHTML =
       '<div style="grid-column:1/-1;text-align:center;color:#EF4444;padding:30px">❌ โหลดข้อมูลไม่ได้</div>';
   }
+}
+
+/**
+ * loadLootBoxForRoom — Tenant mode (ดึงด้วย roomNo โดยตรง)
+ * ใช้กรณี ?room=xxx&loot=1 มาจาก LINE
+ */
+async function loadLootBoxForRoom(roomNo) {
+  document.getElementById('lb-grid').innerHTML =
+    '<div style="grid-column:1/-1;text-align:center;color:#94A3B8;padding:30px">⏳ กำลังโหลด...</div>';
+  try {
+    const result = await callGAS('getLootBoxDataByRoom', { roomNo });
+    if (!result.success) {
+      document.getElementById('lb-grid').innerHTML =
+        `<div style="grid-column:1/-1;text-align:center;color:#EF4444;padding:30px">❌ ${result.message || 'โหลดไม่ได้'}</div>`;
+      return;
+    }
+    _renderLootBoxPage(result);
+  } catch (e) {
+    document.getElementById('lb-grid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;color:#EF4444;padding:30px">❌ โหลดข้อมูลไม่ได้</div>';
+  }
+}
+
+/**
+ * _renderLootBoxPage — render header + grid จาก result ที่ได้จาก GAS
+ */
+function _renderLootBoxPage(result) {
+  document.getElementById('lb-room-label').textContent  = result.roomNo ? 'ห้อง ' + result.roomNo : '';
+  document.getElementById('lb-count').textContent       = result.totalBox || 0;
+  renderLootGrid(result.boxes || {});
 }
 
 /**
