@@ -193,26 +193,19 @@
     </table>
   </div>
 </div>
-<!-- ===== LOOT BOX ===== -->
-<div class="page" id="page-loot-box">
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;padding:24px;text-align:center">
-    <div id="lb-ready">
-      <div id="lb-box" style="width:120px;height:120px;background:#FAEEDA;border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:64px">🎁</div>
-      <div style="font-size:20px;font-weight:700;color:#1F2937;margin-bottom:8px">กล่องสุ่มพิเศษ</div>
-      <div style="font-size:14px;color:#6B7280;margin-bottom:16px;line-height:1.6">เช็คอินครบ 28 วัน<br>กดเปิดเพื่อรับส่วนลดทันที</div>
-      <button id="lb-open-btn" onclick="doOpenLootBox()" style="width:100%;padding:14px;background:#7F77DD;border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;font-family:Sarabun,sans-serif;cursor:pointer">🎁 เปิดกล่องสุ่ม</button>
-      <div id="lb-error" style="color:#DC2626;font-size:13px;margin-top:12px"></div>
-    </div>
-    <div id="lb-result" style="display:none">
-      <div style="width:120px;height:120px;background:#D1FAE5;border-radius:24px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:64px">🎉</div>
-      <div style="font-size:20px;font-weight:700;color:#1F2937;margin-bottom:16px">ยินดีด้วย!</div>
-      <div style="background:#ECFDF5;border-radius:16px;padding:20px;margin-bottom:16px">
-        <div style="font-size:48px;font-weight:700;color:#059669" id="lb-amount">—</div>
-        <div style="font-size:14px;color:#059669;margin-top:4px" id="lb-prize-name">ส่วนลดค่าเช่าเดือนนี้</div>
-      </div>
-      <div style="font-size:13px;color:#6B7280;line-height:1.6">ส่วนลดถูกบันทึกในบิลแล้ว<br>จะเห็นในบิลประจำเดือนครับ</div>
+<!-- ===== LOOTBOX ===== -->
+<div class="page" id="page-lootbox">
+  <div style="text-align:center;padding:28px 20px 16px">
+    <div style="font-size:24px;font-weight:700;color:#F59E0B">🎁 กล่องสุ่มรางวัล</div>
+    <div style="font-size:13px;color:#9CA3AF;margin-top:4px">สะสมจากการเช็คอินติดต่อกัน</div>
+    <div style="font-size:13px;color:#27A896;margin-top:6px;font-weight:700" id="lb-room"></div>
+  </div>
+  <div style="display:flex;justify-content:center;margin-bottom:20px">
+    <div style="background:#1E293B;border:1px solid #F59E0B;border-radius:99px;padding:8px 24px;font-size:15px;font-weight:700;color:#F59E0B">
+      🎁 กล่องที่มี: <span id="lb-count">0</span> ใบ
     </div>
   </div>
+  <div id="lb-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding:0 20px 100px;max-width:400px;margin:0 auto"></div>
 </div>
 <!-- ===== TENANT DASHBOARD ===== -->
 <div class="page" id="page-tenant">
@@ -332,6 +325,14 @@
 <div class="drawer" id="drawer">
   <button class="drawer-close" onclick="closeDrawer()">✕</button>
   <div class="drawer-title">เมนูเพิ่มเติม</div>
+
+  <button class="drawer-item" onclick="switchPage('lootbox')">
+  <div class="drawer-item-icon" style="background:#FEF3C7">🎁</div>
+  <div>
+    <div class="drawer-item-label">กล่องสุ่มรางวัล</div>
+    <div class="drawer-item-sub">เปิดจากการเช็คอิน</div>
+  </div>
+</button>
 
   <button class="drawer-item" onclick="switchPage('yearly');closeDrawer()">
     <div class="drawer-item-icon" style="background:#DBEAFE">📅</div>
@@ -493,6 +494,8 @@ function switchPage(page) {
   } else {
     document.querySelector('.btn-wrap').style.display='none';
   }
+  // เพิ่มใน NAV_PAGES หรือใน switchPage()
+if (page === 'lootbox') loadLootBox();
   if(page==='usage')  loadUsage();
   if(page==='yearly') loadYearly();
  if(page==='bill-summary') {
@@ -1171,7 +1174,153 @@ function openTenantManage() {
     window.open(url, '_blank');
   }
 } 
+
+  // ============================================================
+//  LOOTBOX
+// ============================================================
+const LB_CONFIG = [
+  { milestone:7,  name:"กล่องเงิน",     desc:"ส่วนลด 5–20 บาท",   theme:"gold",   ms:"gold"   },
+  { milestone:14, name:"กล่องทอง",      desc:"ส่วนลด 10–50 บาท",  theme:"teal",   ms:"teal"   },
+  { milestone:21, name:"กล่องแพลตินัม", desc:"ส่วนลด 30–100 บาท", theme:"purple", ms:"purple" },
+  { milestone:28, name:"กล่องตำนาน",    desc:"ส่วนลด 50–200 บาท", theme:"red",    ms:"red"    },
+];
+let lbOpening = false;
+
+async function loadLootBox() {
+  document.getElementById('lb-grid').innerHTML =
+    '<div style="grid-column:1/-1;text-align:center;color:#94A3B8;padding:30px">⏳ กำลังโหลด...</div>';
+  try {
+    // ดึง userId จาก LIFF profile
+    const profile = liff.isLoggedIn() ? await liff.getProfile() : null;
+    if (!profile) { showToast('กรุณาเปิดผ่าน LINE ครับ','error'); return; }
+    const result = await callGAS('getLootBoxData', { userId: profile.userId });
+    if (!result.success) { showToast('❌ '+result.message,'error'); return; }
+    document.getElementById('lb-room').textContent  = result.roomNo ? `ห้อง ${result.roomNo}` : '';
+    document.getElementById('lb-count').textContent = result.totalBox || 0;
+    renderLootGrid(result.boxes || {});
+  } catch(e) {
+    showToast('❌ โหลดไม่ได้','error');
+  }
+}
+
+function renderLootGrid(boxes) {
+  const grid = document.getElementById('lb-grid');
+  grid.innerHTML = '';
+  LB_CONFIG.forEach(cfg => {
+    const info    = boxes[cfg.milestone] || {};
+    const hasBox  = info.token && !info.opened;
+    const isUsed  = info.token && info.opened;
+    const isLocked = !info.token;
+    const icon    = isUsed ? '✅' : isLocked ? '🔒' : '🎁';
+
+    const card = document.createElement('div');
+    card.className = 'lb-card' + (isUsed?' used':'') + (isLocked?' locked':'');
+    card.id = 'lb-card-'+cfg.milestone;
+    card.innerHTML = `
+      <div class="lb-circle ${cfg.theme}">${icon}</div>
+      <div class="lb-name">${cfg.name}</div>
+      <div class="lb-desc">${isUsed?'เปิดแล้ว':isLocked?'ยังไม่ถึงรอบ':cfg.desc}</div>
+      <div class="lb-ms ${cfg.ms}">ครบ ${cfg.milestone} วัน</div>`;
+    if (hasBox) card.onclick = () => startLootOpen(cfg.milestone, cfg.name, info.token);
+    grid.appendChild(card);
+  });
+}
+
+function startLootOpen(milestone, name, token) {
+  if (lbOpening) return;
+  lbOpening = true;
+
+  document.getElementById('lb-spin-state').style.display = 'block';
+  document.getElementById('lb-result-state').classList.remove('show');
+  document.getElementById('lb-popup-title').textContent  = `กำลังเปิด ${name}...`;
+  document.getElementById('lb-overlay').classList.add('show');
+
+  callGAS('openLootBox', { token })
+    .then(result => {
+      setTimeout(() => {
+        if (!result.success) {
+          closeLootPopup();
+          showToast('❌ '+(result.message||'เกิดข้อผิดพลาด'),'error');
+          lbOpening = false; return;
+        }
+        document.getElementById('lb-spin-state').style.display = 'none';
+        document.getElementById('lb-result-icon').textContent   = getLootIcon(result.discount_amount);
+        document.getElementById('lb-result-name').textContent   = result.prize_name;
+        document.getElementById('lb-result-amount').textContent = result.discount_amount;
+        document.getElementById('lb-result-state').classList.add('show');
+
+        // update card
+        const card = document.getElementById('lb-card-'+milestone);
+        if (card) {
+          card.classList.add('used');
+          card.querySelector('.lb-circle').textContent = '✅';
+          card.querySelector('.lb-desc').textContent   = 'เปิดแล้ว';
+          card.onclick = null;
+        }
+        const cur = Number(document.getElementById('lb-count').textContent) || 0;
+        document.getElementById('lb-count').textContent = Math.max(0, cur - 1);
+
+        spawnLootConfetti();
+        lbOpening = false;
+      }, 2000);
+    })
+    .catch(() => { closeLootPopup(); showToast('❌ เกิดข้อผิดพลาด','error'); lbOpening = false; });
+}
+
+function getLootIcon(amount) {
+  if (amount >= 200) return '👑';
+  if (amount >= 100) return '💎';
+  if (amount >= 50)  return '🥇';
+  if (amount >= 20)  return '🥈';
+  return '🥉';
+}
+
+function closeLootPopup() {
+  document.getElementById('lb-overlay').classList.remove('show');
+  document.getElementById('lb-confetti').classList.remove('show');
+  document.getElementById('lb-confetti').innerHTML = '';
+}
+
+function spawnLootConfetti() {
+  const wrap   = document.getElementById('lb-confetti');
+  const colors = ['#F59E0B','#14B8A6','#8B5CF6','#EF4444','#10B981','#F472B6'];
+  wrap.innerHTML = ''; wrap.classList.add('show');
+  for (let i = 0; i < 60; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'lb-dot';
+    dot.style.left              = Math.random()*100+'vw';
+    dot.style.background        = colors[Math.floor(Math.random()*colors.length)];
+    dot.style.animationDuration = (Math.random()*2+1.5)+'s';
+    dot.style.animationDelay    = (Math.random()*0.8)+'s';
+    dot.style.width  = (Math.random()*8+4)+'px';
+    dot.style.height = (Math.random()*8+4)+'px';
+    wrap.appendChild(dot);
+  }
+  setTimeout(() => wrap.classList.remove('show'), 4000);
+}
 init();
 </script>
+  <!-- LOOTBOX POPUP -->
+<div class="lb-overlay" id="lb-overlay">
+  <div class="lb-popup">
+    <div id="lb-spin-state">
+      <div class="lb-spin-wrap">
+        <div class="lb-spin-ring"></div>
+        <div class="lb-spin-icon">🎁</div>
+      </div>
+      <div style="font-size:18px;font-weight:700;color:#F1F5F9;margin-bottom:6px" id="lb-popup-title">กำลังเปิดกล่อง...</div>
+      <div style="font-size:13px;color:#94A3B8">รอสักครู่นะครับ ✨</div>
+    </div>
+    <div class="lb-result" id="lb-result-state">
+      <div style="font-size:64px;margin-bottom:12px" id="lb-result-icon">🎉</div>
+      <div style="font-size:22px;font-weight:700;color:#F59E0B;margin-bottom:6px">ยินดีด้วย!</div>
+      <div style="font-size:15px;color:#94A3B8;margin-bottom:8px" id="lb-result-name"></div>
+      <div style="font-size:44px;font-weight:700;color:#14B8A6" id="lb-result-amount"></div>
+      <div style="font-size:14px;color:#94A3B8;margin-bottom:20px">บาท ลดจากบิลเดือนนี้</div>
+      <button class="lb-confirm-btn" onclick="closeLootPopup()">รับรางวัล 🎊</button>
+    </div>
+  </div>
+</div>
+<div class="lb-confetti" id="lb-confetti"></div>
 </body>
 </html>
