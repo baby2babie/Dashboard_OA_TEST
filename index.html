@@ -1201,16 +1201,17 @@ const glow = big ? '#FFD700' : medium ? '#FACC15' : '#D4A017';
 
       <!-- glow -->
       <radialGradient id="${uid}-glow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="${glow}" stop-opacity="0.6"/>
-        <stop offset="100%" stop-color="${glow}" stop-opacity="0"/>
-      </radialGradient>
+  <stop offset="0%" stop-color="${glow}" stop-opacity="0.7"/>
+  <stop offset="60%" stop-color="${glow}" stop-opacity="0.2"/>
+  <stop offset="100%" stop-color="${glow}" stop-opacity="0"/>
+</radialGradient>
     </defs>
 
     <!-- glow -->
     <circle cx="50" cy="50" r="46" fill="url(#${uid}-glow)"/>
 
     <!-- shadow (เข้มขึ้น) -->
-    <ellipse cx="50" cy="92" rx="26" ry="7" fill="rgba(0,0,0,0.35)"/>
+    <ellipse cx="50" cy="92" rx="28" ry="8" fill="rgba(0,0,0,0.4)"/>
 
     <!-- rim -->
     <circle cx="50" cy="48" r="42" fill="url(#${uid}-rim)"/>
@@ -1222,7 +1223,7 @@ const glow = big ? '#FFD700' : medium ? '#FACC15' : '#D4A017';
     <circle cx="50" cy="48" r="32" fill="none" stroke="${c3}" stroke-width="2" opacity="0.7"/>
 
     <!-- highlight (ชัดขึ้น) -->
-    <ellipse cx="42" cy="28" rx="18" ry="8" fill="white" opacity="0.35"/>
+    <ellipse cx="42" cy="28" rx="18" ry="8" fill="white" opacity="0.28"/>
 
     <!-- symbol -->
     <text x="50" y="58"
