@@ -1074,7 +1074,7 @@ async function openDirectLootBox(room, token) {
         return;
       }
       document.getElementById('lb-spin-state').style.display = 'none';
-      document.getElementById('lb-result-icon').textContent   = getLootIcon(result.discount_amount);
+      document.getElementById('lb-result-icon').innerHTML = getLootIcon(result.discount_amount);
       document.getElementById('lb-result-name').textContent   = result.prize_name;
       document.getElementById('lb-result-amount').textContent = result.discount_amount;
       document.getElementById('lb-result-state').classList.add('show');
@@ -1173,11 +1173,13 @@ function startLootOpen(milestone, name, token) {
 }
 
 function getLootIcon(amount) {
-  if (amount >= 200) return '👑';
-  if (amount >= 100) return '💎';
-  if (amount >= 50)  return '🥇';
-  if (amount >= 20)  return '🥈';
-  return '🥉';
+  const color = amount >= 100 ? '#F59E0B' : amount >= 50 ? '#C0C0C0' : '#CD7F32';
+  const symbol = amount >= 100 ? '฿' : amount >= 50 ? '฿' : '฿';
+  return `<svg width="64" height="64" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="30" fill="${color}" stroke="${color}88" stroke-width="3"/>
+    <circle cx="32" cy="32" r="24" fill="${color}CC"/>
+    <text x="32" y="42" text-anchor="middle" font-size="28" font-weight="bold" fill="white" font-family="Arial">${symbol}</text>
+  </svg>`;
 }
 
 function closeLootPopup() {
