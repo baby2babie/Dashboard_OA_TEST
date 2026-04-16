@@ -1145,13 +1145,15 @@ function startLootOpen(milestone, name, token) {
         }
         // แสดงผล
         
-document.getElementById('lb-spin-state').style.display = 'none';
-
-const amount = Number(result.discount_amount) || 0;
+dconst amount = Number(result.discount_amount) || 0;
 const tier = getLootTier(amount);
 
 const iconEl = document.getElementById('lb-result-icon');
-iconEl.className = 'lb-coin ' + tier; // 👈 ใส่ tier
+
+iconEl.className = 'lb-coin';
+iconEl.classList.add(tier);
+
+iconEl.innerHTML = '';
 iconEl.innerHTML = `
   <div class="lb-ray"></div>
   ${getLootIcon(amount)}
@@ -1160,7 +1162,13 @@ iconEl.innerHTML = `
 document.getElementById('lb-result-name').textContent   = result.prize_name;
 document.getElementById('lb-result-amount').textContent = amount;
 
-document.getElementById('lb-result-state').classList.add('show');
+setTimeout(() => {
+  document.getElementById('lb-result-state').classList.add('show');
+}, 150);
+
+if (tier !== 'common') {
+  spawnLootConfetti();
+}
 
         // update card
         const card = document.getElementById('lb-card-' + milestone);
