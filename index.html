@@ -1171,7 +1171,6 @@ function startLootOpen(milestone, name, token) {
       lbOpening = false;
     });
 }
-
 function getLootIcon(amount) {
   const big    = amount >= 50;
   const medium = amount >= 20;
@@ -1180,7 +1179,9 @@ function getLootIcon(amount) {
   const c2 = big ? '#FFB300' : medium ? '#C8922A' : '#A87820';
   const c3 = big ? '#FFF6B0' : medium ? '#F5DE8A' : '#D4B860';
 
-  const sz = 84;
+  const glow = big ? '#FFD700' : medium ? '#E8C96B' : '#C8A84B';
+
+  const sz = 88;
   const uid = 'coin-' + Math.random().toString(36).substr(2, 9);
 
   return `
@@ -1197,12 +1198,21 @@ function getLootIcon(amount) {
         <stop offset="75%" stop-color="${c2}"/>
         <stop offset="100%" stop-color="${c1}"/>
       </radialGradient>
+
+      <!-- glow -->
+      <radialGradient id="${uid}-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="${glow}" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="${glow}" stop-opacity="0"/>
+      </radialGradient>
     </defs>
 
-    <!-- shadow -->
-    <ellipse cx="50" cy="90" rx="24" ry="6" fill="rgba(0,0,0,0.25)"/>
+    <!-- glow background -->
+    <circle cx="50" cy="50" r="45" fill="url(#${uid}-glow)"/>
 
-    <!-- outer rim -->
+    <!-- shadow -->
+    <ellipse cx="50" cy="92" rx="24" ry="6" fill="rgba(0,0,0,0.25)"/>
+
+    <!-- rim -->
     <circle cx="50" cy="48" r="42" fill="url(#${uid}-rim)"/>
 
     <!-- coin -->
@@ -1223,6 +1233,13 @@ function getLootIcon(amount) {
       fill="${c2}"
       stroke="${c3}"
       stroke-width="1.2">฿</text>
+
+    <!-- sparkles -->
+    <g fill="white" opacity="0.9">
+      <polygon points="20,20 22,26 28,28 22,30 20,36 18,30 12,28 18,26"/>
+      <polygon points="70,40 72,45 78,47 72,49 70,54 68,49 62,47 68,45"/>
+      <polygon points="60,18 61,22 65,23 61,24 60,28 59,24 55,23 59,22"/>
+    </g>
 
   </svg>`;
 }
