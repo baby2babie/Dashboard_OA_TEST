@@ -1177,7 +1177,7 @@ function getLootIcon(amount) {
 
   const c1 = big ? '#FFD700' : medium ? '#E8C96B' : '#C8A84B';
   const c2 = big ? '#FFB300' : medium ? '#C8922A' : '#A87820';
-  const c3 = big ? '#FFF6B0' : medium ? '#F5DE8A' : '#D4B860';
+  const c3 = big ? '#FFF8CC' : medium ? '#F5E7A0' : '#E0C878';
 
   const glow = big ? '#FFD700' : medium ? '#E8C96B' : '#C8A84B';
 
@@ -1188,29 +1188,29 @@ function getLootIcon(amount) {
   <svg width="${sz}" height="${sz}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
 
     <defs>
-      <radialGradient id="${uid}-coin" cx="35%" cy="30%" r="65%">
+      <radialGradient id="${uid}-coin" cx="35%" cy="28%" r="65%">
         <stop offset="0%" stop-color="${c3}"/>
-        <stop offset="60%" stop-color="${c1}"/>
+        <stop offset="55%" stop-color="${c1}"/>
         <stop offset="100%" stop-color="${c2}"/>
       </radialGradient>
 
       <radialGradient id="${uid}-rim" cx="50%" cy="50%" r="50%">
-        <stop offset="75%" stop-color="${c2}"/>
+        <stop offset="70%" stop-color="${c2}"/>
         <stop offset="100%" stop-color="${c1}"/>
       </radialGradient>
 
       <!-- glow -->
       <radialGradient id="${uid}-glow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="${glow}" stop-opacity="0.5"/>
+        <stop offset="0%" stop-color="${glow}" stop-opacity="0.6"/>
         <stop offset="100%" stop-color="${glow}" stop-opacity="0"/>
       </radialGradient>
     </defs>
 
-    <!-- glow background -->
-    <circle cx="50" cy="50" r="45" fill="url(#${uid}-glow)"/>
+    <!-- glow -->
+    <circle cx="50" cy="50" r="46" fill="url(#${uid}-glow)"/>
 
-    <!-- shadow -->
-    <ellipse cx="50" cy="92" rx="24" ry="6" fill="rgba(0,0,0,0.25)"/>
+    <!-- shadow (เข้มขึ้น) -->
+    <ellipse cx="50" cy="92" rx="26" ry="7" fill="rgba(0,0,0,0.35)"/>
 
     <!-- rim -->
     <circle cx="50" cy="48" r="42" fill="url(#${uid}-rim)"/>
@@ -1219,26 +1219,26 @@ function getLootIcon(amount) {
     <circle cx="50" cy="48" r="34" fill="url(#${uid}-coin)"/>
 
     <!-- inner ring -->
-    <circle cx="50" cy="48" r="32" fill="none" stroke="${c3}" stroke-width="2" opacity="0.6"/>
+    <circle cx="50" cy="48" r="32" fill="none" stroke="${c3}" stroke-width="2" opacity="0.7"/>
 
-    <!-- highlight -->
-    <ellipse cx="42" cy="30" rx="16" ry="7" fill="white" opacity="0.25"/>
+    <!-- highlight (ชัดขึ้น) -->
+    <ellipse cx="42" cy="28" rx="18" ry="8" fill="white" opacity="0.35"/>
 
     <!-- symbol -->
     <text x="50" y="58"
       text-anchor="middle"
-      font-size="32"
+      font-size="34"
       font-weight="900"
       font-family="Arial Black, Arial"
       fill="${c2}"
       stroke="${c3}"
-      stroke-width="1.2">฿</text>
+      stroke-width="1.4">฿</text>
 
-    <!-- sparkles -->
+    <!-- sparkles (จัดตำแหน่งใหม่ให้บาลานซ์) -->
     <g fill="white" opacity="0.9">
-      <polygon points="20,20 22,26 28,28 22,30 20,36 18,30 12,28 18,26"/>
-      <polygon points="70,40 72,45 78,47 72,49 70,54 68,49 62,47 68,45"/>
-      <polygon points="60,18 61,22 65,23 61,24 60,28 59,24 55,23 59,22"/>
+      <polygon points="18,22 20,28 26,30 20,32 18,38 16,32 10,30 16,28"/>
+      <polygon points="72,38 74,44 80,46 74,48 72,54 70,48 64,46 70,44"/>
+      <polygon points="60,16 61,20 65,21 61,22 60,26 59,22 55,21 59,20"/>
     </g>
 
   </svg>`;
