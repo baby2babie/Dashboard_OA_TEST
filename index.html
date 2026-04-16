@@ -1172,16 +1172,14 @@ function startLootOpen(milestone, name, token) {
     });
 }
 function getLootIcon(amount) {
-  const big    = amount >= 50;
-  const medium = amount >= 20;
+  const big = amount >= 50;
 
-  const c1 = big ? '#FFD700' : medium ? '#FACC15' : '#D4A017'; // กลาง
-const c2 = big ? '#FF8C00' : medium ? '#D97706' : '#92400E'; // ขอบเข้ม
-const c3 = big ? '#FFF9C4' : medium ? '#FEF08A' : '#FDE68A'; // highlight
+  const c1 = '#FFD700';
+  const c2 = '#FF8C00';
+  const c3 = '#FFF9C4';
 
-const glow = big ? '#FFD700' : medium ? '#FACC15' : '#D4A017';
-
-  const sz = 88;
+  const glow = '#FFD700';
+  const sz = 100;
   const uid = 'coin-' + Math.random().toString(36).substr(2, 9);
 
   return `
@@ -1194,35 +1192,34 @@ const glow = big ? '#FFD700' : medium ? '#FACC15' : '#D4A017';
         <stop offset="100%" stop-color="${c2}"/>
       </radialGradient>
 
-      <radialGradient id="${uid}-rim" cx="50%" cy="50%" r="50%">
-        <stop offset="70%" stop-color="${c2}"/>
-        <stop offset="100%" stop-color="${c1}"/>
-      </radialGradient>
-
-      <!-- glow -->
       <radialGradient id="${uid}-glow" cx="50%" cy="50%" r="50%">
-  <stop offset="0%" stop-color="${glow}" stop-opacity="0.7"/>
-  <stop offset="60%" stop-color="${glow}" stop-opacity="0.2"/>
-  <stop offset="100%" stop-color="${glow}" stop-opacity="0"/>
-</radialGradient>
+        <stop offset="0%" stop-color="${glow}" stop-opacity="0.7"/>
+        <stop offset="100%" stop-color="${glow}" stop-opacity="0"/>
+      </radialGradient>
     </defs>
+
+    <!-- 🔥 ลำแสง -->
+    ${big ? `
+    <g opacity="0.7">
+      <polygon points="50,5 55,35 45,35" fill="${glow}"/>
+      <polygon points="95,50 65,55 65,45" fill="${glow}"/>
+      <polygon points="50,95 55,65 45,65" fill="${glow}"/>
+      <polygon points="5,50 35,55 35,45" fill="${glow}"/>
+      <polygon points="80,20 60,40 55,35" fill="${glow}"/>
+      <polygon points="20,20 40,40 35,35" fill="${glow}"/>
+    </g>
+    ` : ''}
 
     <!-- glow -->
     <circle cx="50" cy="50" r="46" fill="url(#${uid}-glow)"/>
 
-    <!-- shadow (เข้มขึ้น) -->
+    <!-- shadow -->
     <ellipse cx="50" cy="92" rx="28" ry="8" fill="rgba(0,0,0,0.4)"/>
 
-    <!-- rim -->
-    <circle cx="50" cy="48" r="42" fill="url(#${uid}-rim)"/>
-
     <!-- coin -->
-    <circle cx="50" cy="48" r="34" fill="url(#${uid}-coin)"/>
+    <circle cx="50" cy="48" r="38" fill="url(#${uid}-coin)"/>
 
-    <!-- inner ring -->
-    <circle cx="50" cy="48" r="32" fill="none" stroke="${c3}" stroke-width="2" opacity="0.7"/>
-
-    <!-- highlight (ชัดขึ้น) -->
+    <!-- highlight -->
     <ellipse cx="42" cy="28" rx="18" ry="8" fill="white" opacity="0.28"/>
 
     <!-- symbol -->
@@ -1235,12 +1232,20 @@ const glow = big ? '#FFD700' : medium ? '#FACC15' : '#D4A017';
       stroke="${c3}"
       stroke-width="1.4">฿</text>
 
-    <!-- sparkles (จัดตำแหน่งใหม่ให้บาลานซ์) -->
-    <g fill="white" opacity="0.9">
-      <polygon points="18,22 20,28 26,30 20,32 18,38 16,32 10,30 16,28"/>
-      <polygon points="72,38 74,44 80,46 74,48 72,54 70,48 64,46 70,44"/>
-      <polygon points="60,16 61,20 65,21 61,22 60,26 59,22 55,21 59,20"/>
+    <!-- ✨ เศษลอย -->
+    ${big ? `
+    <g>
+      <rect x="15" y="20" width="4" height="4" fill="#FFD700">
+        <animate attributeName="y" values="20;30;20" dur="1s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="80" y="40" width="4" height="4" fill="#F472B6">
+        <animate attributeName="y" values="40;50;40" dur="1.2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="60" y="10" width="3" height="3" fill="#22D3EE">
+        <animate attributeName="y" values="10;20;10" dur="0.8s" repeatCount="indefinite"/>
+      </rect>
     </g>
+    ` : ''}
 
   </svg>`;
 }
