@@ -1175,11 +1175,11 @@ function getLootIcon(amount) {
   const big    = amount >= 50;
   const medium = amount >= 20;
 
-  const c1 = big ? '#FFD700' : medium ? '#E8C96B' : '#C8A84B';
-  const c2 = big ? '#FFB300' : medium ? '#C8922A' : '#A87820';
-  const c3 = big ? '#FFF8CC' : medium ? '#F5E7A0' : '#E0C878';
+  const c1 = big ? '#FFD700' : medium ? '#FACC15' : '#D4A017'; // กลาง
+const c2 = big ? '#FF8C00' : medium ? '#D97706' : '#92400E'; // ขอบเข้ม
+const c3 = big ? '#FFF9C4' : medium ? '#FEF08A' : '#FDE68A'; // highlight
 
-  const glow = big ? '#FFD700' : medium ? '#E8C96B' : '#C8A84B';
+const glow = big ? '#FFD700' : medium ? '#FACC15' : '#D4A017';
 
   const sz = 88;
   const uid = 'coin-' + Math.random().toString(36).substr(2, 9);
