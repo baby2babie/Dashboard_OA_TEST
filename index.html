@@ -1144,31 +1144,11 @@ function startLootOpen(milestone, name, token) {
           return;
         }
         // แสดงผล
-        
-dconst amount = Number(result.discount_amount) || 0;
-const tier = getLootTier(amount);
-
-const iconEl = document.getElementById('lb-result-icon');
-
-iconEl.className = 'lb-coin';
-iconEl.classList.add(tier);
-
-iconEl.innerHTML = '';
-iconEl.innerHTML = `
-  <div class="lb-ray"></div>
-  ${getLootIcon(amount)}
-`;
-
-document.getElementById('lb-result-name').textContent   = result.prize_name;
-document.getElementById('lb-result-amount').textContent = amount;
-
-setTimeout(() => {
-  document.getElementById('lb-result-state').classList.add('show');
-}, 150);
-
-if (tier !== 'common') {
-  spawnLootConfetti();
-}
+        document.getElementById('lb-spin-state').style.display = 'none';
+        document.getElementById('lb-result-icon').innerHTML = getLootIcon(result.discount_amount);
+        document.getElementById('lb-result-name').textContent   = result.prize_name;
+        document.getElementById('lb-result-amount').textContent = result.discount_amount;
+        document.getElementById('lb-result-state').classList.add('show');
 
         // update card
         const card = document.getElementById('lb-card-' + milestone);
@@ -1192,13 +1172,60 @@ if (tier !== 'common') {
     });
 }
 
-function getLootTier(amount) {
-  if (amount >= 50) return 'legendary';
-  if (amount >= 25) return 'epic';
-  if (amount >= 20) return 'rare';
-  return 'common';
+function getLootIcon(amount) {
+  const big    = amount >= 50;
+  const medium = amount >= 20;
+
+  const c1 = big ? '#FFD700' : medium ? '#E8C96B' : '#C8A84B';
+  const c2 = big ? '#FFB300' : medium ? '#C8922A' : '#A87820';
+  const c3 = big ? '#FFF6B0' : medium ? '#F5DE8A' : '#D4B860';
+
+  const sz = 84;
+  const uid = 'coin-' + Math.random().toString(36).substr(2, 9);
+
+  return `
+  <svg width="${sz}" height="${sz}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+
+    <defs>
+      <radialGradient id="${uid}-coin" cx="35%" cy="30%" r="65%">
+        <stop offset="0%" stop-color="${c3}"/>
+        <stop offset="60%" stop-color="${c1}"/>
+        <stop offset="100%" stop-color="${c2}"/>
+      </radialGradient>
+
+      <radialGradient id="${uid}-rim" cx="50%" cy="50%" r="50%">
+        <stop offset="75%" stop-color="${c2}"/>
+        <stop offset="100%" stop-color="${c1}"/>
+      </radialGradient>
+    </defs>
+
+    <!-- shadow -->
+    <ellipse cx="50" cy="90" rx="24" ry="6" fill="rgba(0,0,0,0.25)"/>
+
+    <!-- outer rim -->
+    <circle cx="50" cy="48" r="42" fill="url(#${uid}-rim)"/>
+
+    <!-- coin -->
+    <circle cx="50" cy="48" r="34" fill="url(#${uid}-coin)"/>
+
+    <!-- inner ring -->
+    <circle cx="50" cy="48" r="32" fill="none" stroke="${c3}" stroke-width="2" opacity="0.6"/>
+
+    <!-- highlight -->
+    <ellipse cx="42" cy="30" rx="16" ry="7" fill="white" opacity="0.25"/>
+
+    <!-- symbol -->
+    <text x="50" y="58"
+      text-anchor="middle"
+      font-size="32"
+      font-weight="900"
+      font-family="Arial Black, Arial"
+      fill="${c2}"
+      stroke="${c3}"
+      stroke-width="1.2">฿</text>
+
+  </svg>`;
 }
-  
 function closeLootPopup() {
   document.getElementById('lb-overlay').classList.remove('show');
   document.getElementById('lb-confetti').classList.remove('show');
