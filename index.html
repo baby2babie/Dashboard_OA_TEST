@@ -1074,7 +1074,7 @@ async function openDirectLootBox(room, token) {
         return;
       }
       document.getElementById('lb-spin-state').style.display = 'none';
-      document.getElementById('lb-result-icon').innerHTML = getLootIcon(result.discount_amount);
+      document.getElementById('lb-result-icon').textContent   = getLootIcon(result.discount_amount);
       document.getElementById('lb-result-name').textContent   = result.prize_name;
       document.getElementById('lb-result-amount').textContent = result.discount_amount;
       document.getElementById('lb-result-state').classList.add('show');
@@ -1173,48 +1173,11 @@ function startLootOpen(milestone, name, token) {
 }
 
 function getLootIcon(amount) {
-  // สี + ขนาดตามจำนวนเงิน
-  const big    = amount >= 100;
-  const medium = amount >= 50;
-  const c1 = big ? '#FFD700' : medium ? '#E8C96B' : '#C8A84B'; // outer
-  const c2 = big ? '#FFA500' : medium ? '#C8922A' : '#A87820'; // inner
-  const c3 = big ? '#FFE566' : medium ? '#F0D878' : '#D4B860'; // highlight
-  const sz = big ? 80 : 72;
-
-  return `<svg width="${sz}" height="${sz}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="coinGrad" cx="38%" cy="35%" r="60%">
-        <stop offset="0%"   stop-color="${c3}"/>
-        <stop offset="50%"  stop-color="${c1}"/>
-        <stop offset="100%" stop-color="${c2}"/>
-      </radialGradient>
-      <radialGradient id="rimGrad" cx="50%" cy="50%" r="50%">
-        <stop offset="80%"  stop-color="${c2}"/>
-        <stop offset="100%" stop-color="${c1}"/>
-      </radialGradient>
-    </defs>
-    <!-- shadow -->
-    <ellipse cx="40" cy="74" rx="22" ry="5" fill="rgba(0,0,0,0.25)"/>
-    <!-- rim -->
-    <circle cx="40" cy="38" r="36" fill="url(#rimGrad)"/>
-    <!-- coin face -->
-    <circle cx="40" cy="38" r="31" fill="url(#coinGrad)"/>
-    <!-- inner ring -->
-    <circle cx="40" cy="38" r="31" fill="none" stroke="${c3}" stroke-width="1.5" opacity="0.6"/>
-    <!-- highlight arc -->
-    <path d="M 18 22 Q 28 14 44 16" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
-    <!-- ฿ symbol -->
-    <text x="40" y="50" text-anchor="middle"
-      font-size="30" font-weight="900"
-      font-family="Arial Black, Arial, sans-serif"
-      fill="${c2}" stroke="${c3}" stroke-width="1">฿</text>
-    <!-- sparkles -->
-    <g fill="white" opacity="0.9">
-      <polygon points="22,18 23,21 26,22 23,23 22,26 21,23 18,22 21,21" transform="scale(0.7) translate(14,10)"/>
-      <polygon points="60,42 61,45 64,46 61,47 60,50 59,47 56,46 59,45" transform="scale(0.6) translate(38,18)"/>
-      <polygon points="55,18 56,20 58,21 56,22 55,24 54,22 52,21 54,20" transform="scale(0.5) translate(52,8)"/>
-    </g>
-  </svg>`;
+  if (amount >= 200) return '👑';
+  if (amount >= 100) return '💎';
+  if (amount >= 50)  return '🥇';
+  if (amount >= 20)  return '🥈';
+  return '🥉';
 }
 
 function closeLootPopup() {
